@@ -12,12 +12,30 @@
 import 'core-js/stable'
 import 'regenerator-runtime/runtime'
 import path from 'path'
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
-import MenuBuilder from './menu'
 import { resolveHtmlPath } from './util'
-require('./ipc/nodejs-ipc')
+
+const errors: Error[] = []
+const messages: string[] = []
+process.on('uncaughtException', function (error) {
+  errors.push(error)
+})
+
+const onLog = (message) => {
+  messages.push(message)
+  setTimeout(() => {
+    if (mainWindow?.webContents) {
+      mainWindow?.webContents.send('main-message', JSON.stringify(message))
+    }
+  }, 5000)
+}
+
+import invokeFormatScript from './ipc/nodejs-ipc'
+import { DownloadVideoRequest, FormatVideoRequest } from 'dto/format'
+import windowStateKeeper from '../windowStateKeeper'
+import downloadVideo from './downloadVideo'
 
 export default class AppUpdater {
   constructor() {
@@ -29,7 +47,16 @@ export default class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null
 
-ipcMain.handle('format-video', async (event, arg) => {})
+ipcMain.handle('format-video', async (event, args: FormatVideoRequest) => {
+  const { fileName, username, facecamCoords } = args
+  invokeFormatScript(fileName, username, facecamCoords, onLog)
+})
+
+ipcMain.handle('download-video', async (event, args: DownloadVideoRequest) => {
+  const outputFile = await downloadVideo(args.clipLink)
+
+  return outputFile
+})
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support')
@@ -68,18 +95,23 @@ const createWindow = async () => {
   const getAssetPath = (...paths: string[]): string => {
     return path.join(RESOURCES_PATH, ...paths)
   }
+  const mainWindowStateKeeper = windowStateKeeper('main')
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
+    x: mainWindowStateKeeper.x,
+    y: mainWindowStateKeeper.y,
+    width: mainWindowStateKeeper.width,
+    height: mainWindowStateKeeper.height,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
   })
+  mainWindowStateKeeper.track(mainWindow)
 
+  mainWindow.removeMenu()
   mainWindow.loadURL(resolveHtmlPath('index.html'))
 
   mainWindow.on('ready-to-show', () => {
@@ -96,9 +128,6 @@ const createWindow = async () => {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
-
-  const menuBuilder = new MenuBuilder(mainWindow)
-  menuBuilder.buildMenu()
 
   // Open urls in the user's browser
   mainWindow.webContents.on('new-window', (event, url) => {
@@ -127,10 +156,17 @@ app
   .whenReady()
   .then(() => {
     createWindow()
+
+    setTimeout(() => {
+      mainWindow!.webContents.send('main-error', JSON.stringify({ errors }))
+      mainWindow!.webContents.send('main-message', JSON.stringify({ messages }))
+    }, 10000)
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
       if (mainWindow === null) createWindow()
     })
   })
-  .catch(console.log)
+  .catch((err) =>
+    mainWindow!.webContents.send('main-error', JSON.stringify({ error }))
+  )

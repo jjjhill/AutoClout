@@ -7,6 +7,11 @@ from moviepy.video.fx.resize import resize
 from moviepy.video.fx.margin import margin
 from skimage.filters import gaussian
 import time
+import os
+
+pyEnv = os.getenv('PY_ENV')
+isProd = pyEnv.strip() == 'production' if pyEnv else False
+assetsPath = 'resources/assets' if isProd else 'assets'
 
 
 def blur(image):
@@ -39,7 +44,7 @@ def formatVideo(fileName, username="SomeFuckingGuy", faceCamCoords=(0, 350, 378,
   backgroundClip.save_frame("backgroundClip.png")
 
   linksY = facecamHeight + mainClipHeight
-  twitchLogo = ImageClip("assets/twitch.png")
+  twitchLogo = ImageClip(assetsPath + '/twitch.png')
   twitchLogo = resize(twitchLogo, (120, 120)).set_position((40+100, linksY))
 
   twitchURL = TextClip(username, color='white', fontsize=75).set_position((180+100, linksY + 10))
@@ -54,10 +59,10 @@ def formatVideo(fileName, username="SomeFuckingGuy", faceCamCoords=(0, 350, 378,
   final.save_frame("COMP.png")
 
   start = time.time()
-  return
+  # return
   print('start write', flush=True)
-  final.write_videofile('test_out.mp4', threads=1, fps=30, verbose=False,
-                        logger=None, preset='ultrafast')
+  final.set_duration(5).write_videofile('test_out.mp4', threads=1, fps=30, verbose=False,
+                                        logger=None, preset='ultrafast')
   end = time.time()
   print(end - start)
   print('write done')

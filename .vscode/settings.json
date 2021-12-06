@@ -20,5 +20,12 @@
     "package-lock.json": true,
     "*.{css,sass,scss}.d.ts": true
   },
-  "python.formatting.autopep8Args": ["--max-line-length", "120", "--indent-size=2"]
+  "python.formatting.autopep8Args": [
+    "--max-line-length",
+    "120",
+    "--indent-size=2"
+  ],
+  "python.analysis.extraPaths": [
+    "./src/main/ipc"
+  ]
 }
