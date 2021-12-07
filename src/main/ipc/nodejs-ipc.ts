@@ -5,20 +5,30 @@ const invokeFormatScript = (
   fileName: string,
   username: string,
   facecamCoords: [number, number, number, number],
-  onLog: (message: string) => void
+  onLog: (message: string) => void,
+  onStartVideoWrite: () => void,
+  onEndVideoWrite: () => void,
+  outputFilePath: string,
+  videoLength: number
 ) => {
   if (process.env.NODE_ENV === 'development') {
     const options = {
       args: [
-        'C:\\Users\\Josh\\AutoClout\\test.mp4',
+        fileName,
         username,
         ...facecamCoords.map((x) => x.toString()),
+        outputFilePath,
+        videoLength.toString(),
       ],
     }
     const pyshell = new PythonShell('./src/main/ipc/python-ipc.py', options)
-    // sends a message to the Python script via stdin
     pyshell.on('message', function (message) {
-      // received a message sent from the Python script (a simple "print" statement)
+      if (message === 'START_WRITE') {
+        onStartVideoWrite()
+      }
+      if (message === 'END_WRITE') {
+        onEndVideoWrite()
+      }
       onLog(message)
     })
     pyshell.on('error', (data) => onLog(JSON.stringify(data, null, 2)))
@@ -26,7 +36,9 @@ const invokeFormatScript = (
     pyshell.on('stderr', (data) => onLog(data))
   } else {
     exec(
-      'SET IMAGEMAGICK_BINARY=.\\resources\\bin\\ImageMagick\\magick.exe && SET PY_ENV=production && .\\resources\\build\\exe.win-amd64-3.9\\python-ipc.exe C:\\Users\\Josh\\AutoClout\\test.mp4',
+      `SET IMAGEMAGICK_BINARY=.\\resources\\bin\\ImageMagick\\magick.exe && SET PY_ENV=production && .\\resources\\build\\exe.win-amd64-3.9\\python-ipc.exe ${fileName} ${username} ${facecamCoords
+        .map((x) => x.toString())
+        .join(' ')} ${outputFilePath} ${videoLength}`,
       (err, stdOut, stdErr) => {
         onLog(JSON.stringify(err, null, 2))
         onLog(stdOut.toString())

@@ -17,14 +17,11 @@ import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import { resolveHtmlPath } from './util'
 
-const errors: Error[] = []
-const messages: string[] = []
 process.on('uncaughtException', function (error) {
-  errors.push(error)
+  onLog(error)
 })
 
 const onLog = (message) => {
-  messages.push(message)
   setTimeout(() => {
     if (mainWindow?.webContents) {
       mainWindow?.webContents.send('main-message', JSON.stringify(message))
@@ -47,15 +44,34 @@ export default class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null
 
-ipcMain.handle('format-video', async (event, args: FormatVideoRequest) => {
-  const { fileName, username, facecamCoords } = args
-  invokeFormatScript(fileName, username, facecamCoords, onLog)
+const onStartVideoWrite = () => {
+  mainWindow?.webContents.send('START_WRITE')
+}
+
+const onEndVideoWrite = () => {
+  mainWindow?.webContents.send('END_WRITE')
+}
+
+ipcMain.handle('format-video', async (_, args: FormatVideoRequest) => {
+  const { fileName, username, facecamCoords, videoLength, outputFilePath } =
+    args
+  console.log({ fileName, username, facecamCoords })
+  invokeFormatScript(
+    fileName,
+    username,
+    facecamCoords,
+    onLog,
+    onStartVideoWrite,
+    onEndVideoWrite,
+    outputFilePath,
+    videoLength
+  )
 })
 
-ipcMain.handle('download-video', async (event, args: DownloadVideoRequest) => {
-  const outputFile = await downloadVideo(args.clipLink)
+ipcMain.handle('download-video', async (_, args: DownloadVideoRequest) => {
+  const { outputFile, clipName } = await downloadVideo(args.clipLink)
 
-  return outputFile
+  return { outputFile, clipName }
 })
 
 if (process.env.NODE_ENV === 'production') {
@@ -156,11 +172,6 @@ app
   .whenReady()
   .then(() => {
     createWindow()
-
-    setTimeout(() => {
-      mainWindow!.webContents.send('main-error', JSON.stringify({ errors }))
-      mainWindow!.webContents.send('main-message', JSON.stringify({ messages }))
-    }, 10000)
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.

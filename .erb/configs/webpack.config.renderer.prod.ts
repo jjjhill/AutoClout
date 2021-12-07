@@ -137,5 +137,8 @@ export default merge(baseConfig, {
       isBrowser: false,
       isDevelopment: process.env.NODE_ENV !== 'production',
     }),
+    new webpack.EnvironmentPlugin({
+      FLUENTFFMPEG_COV: '',
+    }),
   ],
 })

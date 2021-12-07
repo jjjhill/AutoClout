@@ -9,6 +9,7 @@ import baseConfig from './webpack.config.base'
 import webpackPaths from './webpack.paths'
 import checkNodeEnv from '../scripts/check-node-env'
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin'
+import ffprobeStatic from 'ffprobe-static'
 
 // When an ESLint server is running, we can't set the NODE_ENV so we'll check if it's
 // at the dev webpack config is not accidentally run in a production environment
@@ -149,6 +150,12 @@ export default merge(baseConfig, {
       env: process.env.NODE_ENV,
       isDevelopment: process.env.NODE_ENV !== 'production',
       nodeModules: webpackPaths.appNodeModulesPath,
+    }),
+    new webpack.EnvironmentPlugin({
+      FLUENTFFMPEG_COV: '',
+      FFMPEG_PATH:
+        'build\\exe.win-amd64-3.9\\lib\\imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe',
+      FFPROBE_PATH: ffprobeStatic.path,
     }),
   ],
 

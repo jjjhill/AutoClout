@@ -19,7 +19,10 @@ def blur(image):
   return gaussian(image.astype(float), sigma=1, truncate=1)
 
 
-def formatVideo(fileName, username="SomeFuckingGuy", faceCamCoords=(0, 350, 378, 536)):
+defaultOutputFile = os.getcwd() + '\\out\\' + str(time.time()) + '.mp4'
+
+
+def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378, 536), output=defaultOutputFile, videoLength=5):
   # load mp4
   print('formatVideo called', flush=True)
 
@@ -60,9 +63,10 @@ def formatVideo(fileName, username="SomeFuckingGuy", faceCamCoords=(0, 350, 378,
 
   start = time.time()
   # return
-  print('start write', flush=True)
-  final.set_duration(5).write_videofile('test_out.mp4', threads=1, fps=30, verbose=False,
-                                        logger=None, preset='ultrafast')
+  print('START_WRITE', flush=True)
+  print(output, flush=True)
+  final.set_duration(videoLength).write_videofile(output, threads=1, fps=30, verbose=False,
+                                                  logger=None, preset='ultrafast')
   end = time.time()
   print(end - start)
-  print('write done')
+  print('END_WRITE')
