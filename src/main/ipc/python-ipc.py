@@ -3,13 +3,6 @@
 import sys
 from video import video
 
-
-# def callFunction(name):
-#   print(name)
-#   functionToCall = getattr(video, name)
-#   functionToCall('test.mp4')
-
-
 print('python script executed')
 fileName = sys.argv[1]
 username = sys.argv[2]
@@ -22,11 +15,3 @@ videoLength = float(sys.argv[8])
 
 video.formatVideo(fileName, username=username, faceCamCoords=(
     facecamX1, facecamY1, facecamX2, facecamY2), output=outputFilePath, videoLength=videoLength)
-
-
-# async def main():
-#   line = await aioconsole.ainput()
-#   callFunction(line)
-
-# if __name__ == "__main__":
-#   asyncio.run(main())

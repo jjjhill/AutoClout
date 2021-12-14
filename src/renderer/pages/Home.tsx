@@ -68,7 +68,9 @@ const Home = () => {
   const [downloadFilePath, setDownloadFilePath] = useState('')
   const [clipName, setClipName] = useState('')
   const [step, setStep] = useState(1)
-  const { isWriting } = useContext(store)
+  const {
+    state: { isWriting },
+  } = useContext(store)
 
   console.log({ downloadFilePath, facecamCoords, username, isWriting })
 
@@ -204,8 +206,8 @@ const Home = () => {
         </FormatVideo>
       )}
       {isWriting && <CircularProgress />}
-      <video width="360" height="640">
-        <source src="testvideo.mp4#t=0.1" type="video/mp4" />
+      <video width="360" height="640" controls>
+        <source src={`file://${process.cwd()}/test_out.mp4`} type="video/mp4" />
       </video>
     </Container>
   )

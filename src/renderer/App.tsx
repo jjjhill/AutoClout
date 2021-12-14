@@ -18,12 +18,10 @@ export default function App() {
   }, [])
 
   return (
-    <StateProvider>
-      <Router>
-        <Switch>
-          <Route path="/" component={Home} />
-        </Switch>
-      </Router>
-    </StateProvider>
+    <Router>
+      <Switch>
+        <Route path="/" component={Home} />
+      </Switch>
+    </Router>
   )
 }

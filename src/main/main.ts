@@ -64,7 +64,8 @@ ipcMain.handle('format-video', async (_, args: FormatVideoRequest) => {
     onStartVideoWrite,
     onEndVideoWrite,
     outputFilePath,
-    videoLength
+    // videoLength
+    5
   )
 })
 
@@ -123,6 +124,7 @@ const createWindow = async () => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false,
     },
   })
   mainWindowStateKeeper.track(mainWindow)

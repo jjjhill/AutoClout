@@ -1,6 +1,9 @@
+# Custom
 venv
 build/
 clips/
+*.png
+*.mp4
 
 # Logs
 logs
