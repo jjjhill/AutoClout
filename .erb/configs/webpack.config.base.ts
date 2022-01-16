@@ -2,9 +2,12 @@
  * Base webpack config used across other specific configs
  */
 
-import webpack from 'webpack';
-import webpackPaths from './webpack.paths';
-import { dependencies as externals } from '../../release/app/package.json';
+import webpack from 'webpack'
+import webpackPaths from './webpack.paths'
+import { dependencies as externals } from '../../release/app/package.json'
+const createStyledComponentsTransformer =
+  require('typescript-plugin-styled-components').default
+const styledComponentsTransformer = createStyledComponentsTransformer()
 
 export default {
   externals: [...Object.keys(externals || {})],
@@ -16,13 +19,18 @@ export default {
       {
         test: /\.[jt]sx?$/,
         exclude: /node_modules/,
-        use: {
-          loader: 'ts-loader',
-          options: {
-            // Remove this line to enable type checking in webpack builds
-            transpileOnly: true,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              // Remove this line to enable type checking in webpack builds
+              transpileOnly: true,
+              getCustomTransformers: () => ({
+                before: [styledComponentsTransformer],
+              }),
+            },
           },
-        },
+        ],
       },
     ],
   },
@@ -48,4 +56,4 @@ export default {
       NODE_ENV: 'production',
     }),
   ],
-};
+}

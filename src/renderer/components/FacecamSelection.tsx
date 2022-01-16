@@ -1,28 +1,33 @@
 import { Button } from '@mui/material'
-import { useState } from 'react'
-import {
-  ShapeEditor,
-  ImageLayer,
-  SelectionLayer,
-  wrapShape,
-  Rectangle,
-} from 'react-shape-editor'
+import { useEffect, useRef, useState } from 'react'
+import ReactCropper from 'react-cropper'
+import 'cropperjs/dist/cropper.css'
 import omit from 'lodash.omit'
+import Cropper from 'cropperjs'
 
 import styled from 'styled-components'
-import useWindowSize from 'renderer/hooks/useWindowSize'
 
 const Container = styled.div`
-  width: 70%;
+  width: 100%;
+  height: 100%;
 
-  img {
-    width: 100%;
+  svg {
+    max-height: 100%;
+    max-width: 100%;
   }
 `
 
-const RectShape = wrapShape(({ width, height }) => (
-  <rect width={width} height={height} fill="rgba(0,0,255,0.5)" />
-))
+interface Rectangle {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+interface CropData {
+  cropURL: string
+  position: Rectangle
+}
 
 interface Props {
   imgSrc: string
@@ -30,95 +35,67 @@ interface Props {
 }
 
 const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
-  const [item, setItem] = useState({
-    id: '1',
-    x: 20,
-    y: 120,
-    width: 0,
-    height: 0,
-  })
+  const cropperRef = useRef<HTMLImageElement>(null)
+  const [cropData, setCropData] = useState<CropData | undefined>()
 
-  const [{ vectorHeight, vectorWidth }, setVectorDimensions] = useState({
-    vectorHeight: 0,
-    vectorWidth: 0,
-  })
+  const getCropData = () => {
+    const cropper = cropperRef?.current?.cropper
 
-  const [selectedShapeIds, setSelectedShapeIds] = useState(['1'])
+    if (typeof cropper !== 'undefined') {
+      const croppedCanvas = cropper.getCroppedCanvas()
+      const cropBoxData = cropper.getCropBoxData()
+      const data = cropper.getData()
+      const {
+        left,
+        top,
+        width: croppedWidth,
+        height: croppedHeight,
+      } = cropBoxData
 
-  const { id, height, width, x, y } = item
+      const imageData = cropper.getImageData()
+      const { width: displayedWidth, naturalWidth } = imageData
 
-  const shape = (
-    <RectShape
-      key={id}
-      active={selectedShapeIds.indexOf(id) >= 0}
-      shapeId={id}
-      shapeIndex={0}
-      height={height}
-      width={width}
-      x={x}
-      y={y}
-      onChange={(newRect) => {
-        const modifiedRect = {
-          ...newRect,
-        }
-        if (newRect.x < 0) {
-          modifiedRect.x = 0
-        }
-        if (newRect.y < 0) {
-          modifiedRect.y = 0
-        }
-        if (newRect.x + newRect.width > vectorWidth) {
-          modifiedRect.x = vectorWidth - newRect.width
-        }
-        if (newRect.y + newRect.height > vectorHeight) {
-          modifiedRect.y = vectorHeight - newRect.height
-        }
+      const scale = naturalWidth / displayedWidth
+      const realWebcamPosition = {
+        left: left * scale,
+        top: top * scale,
+        width: croppedWidth * scale,
+        height: croppedHeight * scale,
+      }
+      console.log({ imageData, cropBoxData, data, realWebcamPosition })
 
-        setItem((currentItem) => ({
-          ...currentItem,
-          ...modifiedRect,
-        }))
-      }}
-    />
-  )
+      setCropData({
+        cropURL: croppedCanvas.toDataURL(),
+        position: realWebcamPosition,
+      })
 
-  const windowSize = useWindowSize()
+      handleFacecamSelected(realWebcamPosition)
+    }
+  }
 
   return (
     <Container>
-      <ShapeEditor
-        vectorWidth={vectorWidth}
-        vectorHeight={vectorHeight}
-        scale={(windowSize.width / vectorWidth) * 0.9}
-      >
-        <ImageLayer
-          src={imgSrc}
-          onLoad={({ naturalWidth, naturalHeight }) => {
-            setVectorDimensions({
-              vectorWidth: naturalWidth,
-              vectorHeight: naturalHeight,
-            })
-            setItem({
-              ...item,
-              width: 0.2 * naturalWidth,
-              height: 0.2 * naturalHeight,
-            })
-          }}
-        />
-        <SelectionLayer
-          selectedShapeIds={selectedShapeIds}
-          onSelectionChange={(ids) => setSelectedShapeIds(ids)}
-          keyboardTransformMultiplier={5}
-        >
-          {shape}
-        </SelectionLayer>
-      </ShapeEditor>
-      <Button
-        variant="contained"
-        onClick={() => handleFacecamSelected(omit(item, 'id'))}
-      >
+      <ReactCropper
+        style={{ width: '100%' }}
+        preview=".img-preview"
+        src={imgSrc}
+        viewMode={1}
+        dragMode="move"
+        minCropBoxHeight={30}
+        minCropBoxWidth={30}
+        background={false}
+        responsive={true}
+        autoCropArea={0.5}
+        checkOrientation={false}
+        initialAspectRatio={4 / 3}
+        cropend={getCropData}
+        zoom={getCropData}
+        guides={true}
+        ref={cropperRef}
+      />
+      {/* <Button variant="contained" onClick={getCropData}>
         Done
-      </Button>
+      </Button> */}
     </Container>
   )
 }

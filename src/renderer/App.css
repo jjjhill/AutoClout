@@ -2,3 +2,34 @@
   font-family: Nunito;
   src: url(fonts/Nunito/Nunito-VariableFont_wght.ttf);
 }
+
+@font-face {
+  font-family: OpenSans;
+  src: url(fonts/OpenSans/OpenSans-Regular.ttf) format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: OpenSans;
+  src: url(fonts/OpenSans/OpenSans-Bold.ttf) format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+}
+
+body * {
+  font-family: OpenSans !important;
+  font-weight: normal !important;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

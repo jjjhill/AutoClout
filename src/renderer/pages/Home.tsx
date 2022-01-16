@@ -1,215 +1,139 @@
 import styled from 'styled-components'
-import OutlinedInput from '@mui/material/OutlinedInput'
-import ButtonSource from '@mui/material/Button'
-import { useContext, useState } from 'react'
-import { ipcRenderer } from 'electron'
-import extractFrames from 'ffmpeg-extract-frames'
-import ffmpeg from 'fluent-ffmpeg'
-import fs from 'fs'
-import path from 'path'
-import FacecamSelection from 'renderer/components/FacecamSelection'
 import { store } from 'renderer/store'
-import CircularProgress from '@mui/material/CircularProgress'
-import { FormatVideoRequest } from 'dto/format'
+import { useContext } from 'react'
+import { colors, UserStep } from 'renderer/constants'
+import Navigation from 'renderer/components/Navigation'
+import UploadStep from 'renderer/steps/UploadStep'
+import Stepper from '@mui/material/Stepper'
+import StepLabelSource from '@mui/material/StepLabel'
+import Step from '@mui/material/Step'
+import StepConnector, {
+  stepConnectorClasses,
+} from '@mui/material/StepConnector'
+import UploadIcon from '@mui/icons-material/FileUpload'
+import EditIcon from '@mui/icons-material/ModeEditOutline'
+import SettingsIcon from '@mui/icons-material/SettingsSuggest'
+import WebcamSelectStep from 'renderer/steps/WebcamSelectStep'
 
-const Container = styled.div`
-  font-family: Nunito;
-  padding: 30px;
-
-  h2 {
-    margin: 10px;
-  }
-`
-
-const Button = styled(ButtonSource)`
-  && {
-    margin-left: 15px;
-  }
-`
-
-const FlexRow = styled.div`
+const Layout = styled.div`
+  flex: 1;
+  background: ${colors.mediumGray};
   display: flex;
-  align-items: center;
+  padding: 20px;
+  min-height: 0;
 `
 
-const InputLabel = styled.span`
-  font-size: 18px;
+const Content = styled.div`
+  background: ${colors.mediumGray};
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 `
 
-const FormatVideo = styled.div`
-  margin: 20px 50px;
+const StepperContainer = styled.div`
+  width: 100%;
 `
 
-type RectCoords = [number, number, number, number]
-
-const formatVideo = (
-  downloadFilePath: string,
-  username: string,
-  facecamCoords: RectCoords,
-  videoLength: number,
-  outputFilePath: string
-) => {
-  const formatArgs: FormatVideoRequest = {
-    fileName: downloadFilePath,
-    username,
-    facecamCoords,
-    videoLength,
-    outputFilePath,
+const StepLabel = styled(StepLabelSource)`
+  && .MuiStepLabel-label {
+    color: white;
+    margin-top: 5px;
+    font-size: 16px;
   }
-  ipcRenderer.invoke('format-video', formatArgs)
+`
+
+const ColorlibConnector = styled(StepConnector)(() => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: 22,
+  },
+  [`&.${stepConnectorClasses.active}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      backgroundColor: colors.orange,
+    },
+  },
+  [`&.${stepConnectorClasses.completed}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      backgroundColor: colors.orange,
+    },
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    height: 3,
+    border: 0,
+    backgroundColor: colors.lightGray,
+    borderRadius: 1,
+  },
+}))
+
+const ColorlibStepIconRoot = styled('div')(({ ownerState }) => ({
+  backgroundColor: colors.lightGray,
+  zIndex: 1,
+  color: '#fff',
+  width: 50,
+  height: 50,
+  display: 'flex',
+  borderRadius: '50%',
+  justifyContent: 'center',
+  alignItems: 'center',
+  ...(ownerState.active && {
+    backgroundColor: colors.orange,
+    boxShadow: '0 4px 10px 0 rgba(0,0,0,.25)',
+  }),
+  ...(ownerState.completed && {
+    backgroundColor: colors.orange,
+  }),
+}))
+
+function ColorlibStepIcon(props) {
+  const { active, completed, className } = props
+
+  const icons = {
+    1: <UploadIcon />,
+    2: <EditIcon />,
+    3: <SettingsIcon />,
+  }
+
+  return (
+    <ColorlibStepIconRoot
+      ownerState={{ completed, active }}
+      className={className}
+    >
+      {icons[String(props.icon)]}
+    </ColorlibStepIconRoot>
+  )
 }
 
 const Home = () => {
-  const [clipLink, setClipLink] = useState('')
-  const [username, setUsername] = useState('')
-  const [videoLength, setVideoLength] = useState(5)
-  const [screenshotURL, setScreenshotURL] = useState('')
-  const [facecamCoords, setFacecamCoords] = useState<RectCoords | undefined>()
-  const [downloadFilePath, setDownloadFilePath] = useState('')
-  const [clipName, setClipName] = useState('')
-  const [step, setStep] = useState(1)
   const {
-    state: { isWriting },
+    state: { isWriting, page, step },
   } = useContext(store)
 
-  console.log({ downloadFilePath, facecamCoords, username, isWriting })
-
-  const validateClip = (clipLink: string) => {
-    return !clipLink.includes('/clip')
-  }
-
-  const downloadClip = async (link: string) => {
-    const clipLink = link.split('?')[0]
-    try {
-      const { outputFile, clipName: name } = await ipcRenderer.invoke(
-        'download-video',
-        {
-          clipLink,
-        }
-      )
-      console.log({ outputFile, name })
-      // const outputFile =
-      //   'C:\\Users\\Josh\\AutoClout\\clips\\DepressedNurturingSardineNotLikeThis-zTtPiMo7q6ZUdNnk.mp4'
-      // const tokens = outputFile.split('\\')
-      // const fileName = tokens[tokens.length - 1].split('.')[0]
-      const imagePath = `images\\${name}.png`
-      setDownloadFilePath(outputFile)
-      setClipName(name)
-
-      ffmpeg.ffprobe(outputFile, (error, metadata) => {
-        console.log({ error, metadata })
-        const duration = metadata.format.duration
-        console.log({ duration })
-        setVideoLength(Number(duration))
-      })
-
-      await extractFrames({
-        input: outputFile,
-        output: imagePath,
-        offsets: [0],
-        ffmpegPath:
-          'build\\exe.win-amd64-3.9\\lib\\imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe',
-      })
-
-      const base64 = fs
-        .readFileSync(path.join(process.cwd(), imagePath))
-        .toString('base64')
-
-      setScreenshotURL(`data:image/jpg;base64,${base64}`)
-      setStep(2)
-    } catch (err) {
-      console.error(err)
-      if (!validateClip(clipLink)) {
-        console.warn('the clip link might be in the wrong format')
-      }
-    }
-  }
-
-  const outputFilePath = path.join(process.cwd(), 'out', `${clipName}.mp4`)
+  const steps = ['Step 1', 'Step 2', 'Step 3']
+  console.log({ isWriting, page, step })
 
   return (
-    <Container>
-      <FlexRow>
-        <h2>Step 1 - Enter clip URL</h2>
-        {step > 1 && '✅'}
-      </FlexRow>
-      {step === 1 && (
-        <FlexRow>
-          <OutlinedInput
-            autoFocus
-            placeholder="twitch.tv/UserName/clip/ShyCleverRadishDoubleRainbow"
-            value={clipLink}
-            onChange={(e) => setClipLink(e.target.value)}
-            fullWidth
-          />
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => downloadClip(clipLink)}
+    <Layout>
+      <Navigation />
+      <Content>
+        <StepperContainer>
+          <Stepper
+            alternativeLabel
+            activeStep={Number(step)}
+            connector={<ColorlibConnector />}
           >
-            Download
-          </Button>
-        </FlexRow>
-      )}
-      <FlexRow>
-        <h2>Step 2 - Select your Face cam</h2>
-        {step > 2 && '✅'}
-      </FlexRow>
-      {step === 2 && (
-        <FacecamSelection
-          imgSrc={screenshotURL}
-          handleFacecamSelected={(rect) => {
-            setFacecamCoords([
-              rect.x,
-              rect.y,
-              rect.x + rect.width,
-              rect.y + rect.height,
-            ])
-            setStep(3)
-          }}
-        />
-      )}
-      <FlexRow>
-        <h2>Step 3 - Add social links</h2>
-        {step > 3 && '✅'}
-      </FlexRow>
-      {step === 3 && (
-        <>
-          <InputLabel>Twitch: </InputLabel>
-          <OutlinedInput
-            autoFocus
-            placeholder="iiTzTimmy"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </>
-      )}
-
-      {step === 3 && (
-        <FormatVideo>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() =>
-              formatVideo(
-                downloadFilePath,
-                username,
-                facecamCoords,
-                videoLength,
-                outputFilePath
-              )
-            }
-            disabled={isWriting}
-          >
-            Format Video
-          </Button>
-        </FormatVideo>
-      )}
-      {isWriting && <CircularProgress />}
-      <video width="360" height="640" controls>
-        <source src={`file://${process.cwd()}/test_out.mp4`} type="video/mp4" />
-      </video>
-    </Container>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel StepIconComponent={ColorlibStepIcon}>
+                  {label}
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </StepperContainer>
+        {step === UserStep.UPLOAD && <UploadStep />}
+        {step === UserStep.WEBCAM_SELECT && <WebcamSelectStep />}
+      </Content>
+    </Layout>
   )
 }
 
