@@ -1,15 +1,23 @@
-import { createContext, useReducer } from 'react'
+import { Context, createContext, useReducer } from 'react'
 import { ActionTypes } from './actions'
 import { Page, UserStep } from './constants'
 
-const initialState = {
+interface State {
+  isWriting: boolean
+  page: Page
+  step: UserStep
+  screenshotURL: string
+}
+
+const initialState: State = {
   isWriting: false,
   page: Page.HOME,
   step: UserStep.WEBCAM_SELECT,
-  screenshotURL: '',
+  screenshotURL:
+    'https://www.kapwing.com/resources/content/images/2020/02/image---2020-02-19T092836.082.jpg',
 }
 
-const store = createContext(initialState)
+const store = createContext<State>(initialState)
 const { Provider } = store
 
 const StateProvider = ({ children }) => {

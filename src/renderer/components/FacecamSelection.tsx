@@ -17,7 +17,7 @@ const Container = styled.div`
   }
 `
 
-interface Rectangle {
+export interface Rectangle {
   left: number
   top: number
   width: number
@@ -43,33 +43,23 @@ const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
 
     if (typeof cropper !== 'undefined') {
       const croppedCanvas = cropper.getCroppedCanvas()
-      const cropBoxData = cropper.getCropBoxData()
       const data = cropper.getData()
-      const {
-        left,
-        top,
-        width: croppedWidth,
-        height: croppedHeight,
-      } = cropBoxData
+      const { x, y, width, height } = data
 
-      const imageData = cropper.getImageData()
-      const { width: displayedWidth, naturalWidth } = imageData
-
-      const scale = naturalWidth / displayedWidth
-      const realWebcamPosition = {
-        left: left * scale,
-        top: top * scale,
-        width: croppedWidth * scale,
-        height: croppedHeight * scale,
+      const position = {
+        left: x,
+        top: y,
+        height,
+        width,
       }
-      console.log({ imageData, cropBoxData, data, realWebcamPosition })
+      console.log({ position })
 
       setCropData({
         cropURL: croppedCanvas.toDataURL(),
-        position: realWebcamPosition,
+        position,
       })
 
-      handleFacecamSelected(realWebcamPosition)
+      handleFacecamSelected(position)
     }
   }
 
@@ -92,6 +82,7 @@ const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
         zoom={getCropData}
         guides={true}
         ref={cropperRef}
+        wheelZoomRatio={0.5}
       />
       {/* <Button variant="contained" onClick={getCropData}>
         Done

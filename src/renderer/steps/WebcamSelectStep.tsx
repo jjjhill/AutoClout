@@ -1,9 +1,14 @@
-import styled from 'styled-components'
-import { useContext, useRef, useState } from 'react'
+import styled, { css } from 'styled-components'
+import { useContext, useState } from 'react'
 import { colors } from 'renderer/constants'
-import FacecamSelection from 'renderer/components/FacecamSelection'
+import FacecamSelection, {
+  Rectangle,
+} from 'renderer/components/FacecamSelection'
 import { store } from 'renderer/store'
 import Preview from 'renderer/components/Preview'
+import Button from '@mui/material/Button'
+
+interface ContainerProps {}
 
 const Container = styled.div`
   background: ${colors.darkGray};
@@ -13,9 +18,15 @@ const Container = styled.div`
   padding: 16px 24px;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+`
 
+const GridContainer = styled.div`
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-gap: 20px;
+  grid-gap: 40px;
   grid-template-areas:
     'select select preview'
     'select select preview'
@@ -27,8 +38,11 @@ const Container = styled.div`
   #webcam-selection {
     grid-area: select;
   }
+
   #preview {
     grid-area: preview;
+    display: flex;
+    flex-direction: column;
   }
 `
 
@@ -37,46 +51,52 @@ const Options = styled.div`
   grid-area: options;
 `
 
-type RectCoords = [number, number, number, number]
+const Footer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+`
+
+const Positioning = styled.div``
 
 const WebcamSelectStep = () => {
   const [clipLink, setClipLink] = useState('')
-  const [facecamCoords, setFacecamCoords] = useState<RectCoords | undefined>()
+  const [facecamCoords, setFacecamCoords] = useState<Rectangle>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  })
 
   const {
     state: { screenshotURL },
   } = useContext(store)
 
-  const camSelectionRef = useRef()
-
   return (
     <Container>
-      <div id="webcam-selection" ref={camSelectionRef}>
-        <div>Select Webcam</div>
-        <FacecamSelection
-          // imgSrc={screenshotURL}
-          imgSrc={
-            'https://www.kapwing.com/resources/content/images/2020/02/image---2020-02-19T092836.082.jpg'
-          }
-          handleFacecamSelected={(rect) => {
-            setFacecamCoords([
-              rect.left,
-              rect.top,
-              rect.left + rect.width,
-              rect.top + rect.height,
-            ])
-          }}
-          camSelectionRef={camSelectionRef}
-        />
-      </div>
-      <Options>
-        {/* <BorderSelect />
-        <Positioning /> */}
-      </Options>
-      <div id="preview">
-        <div>Preview</div>
-        <Preview />
-      </div>
+      <GridContainer>
+        <div id="webcam-selection">
+          <h3>Select Webcam</h3>
+          <FacecamSelection
+            // imgSrc={screenshotURL}
+            imgSrc={
+              'https://www.kapwing.com/resources/content/images/2020/02/image---2020-02-19T092836.082.jpg'
+            }
+            handleFacecamSelected={setFacecamCoords}
+          />
+        </div>
+        <Options>
+          {/* <BorderSelect /> */}
+          <Positioning />
+        </Options>
+        <div id="preview">
+          <h3>Preview</h3>
+          <Preview webcamCoords={facecamCoords} />
+        </div>
+      </GridContainer>
+      <Footer>
+        <Button variant="contained">Next</Button>
+      </Footer>
     </Container>
   )
 }
