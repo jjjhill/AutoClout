@@ -30,7 +30,7 @@ const generatePreview = async (args: FormatPreviewRequest) => {
     }
     const croppedImageWidth = imageWidth - croppedOutWidth * 2
     const scaledWidth = (1920 / imageHeight) * croppedImageWidth
-
+    console.log({ side, croppedOutWidth, croppedImageWidth, scaledWidth })
     const canCropOutWebcam = scaledWidth >= 1080
     let blurredBackground, gameplayVerticalOffset
 
@@ -44,7 +44,12 @@ const generatePreview = async (args: FormatPreviewRequest) => {
           imageHeight
         )
       } else {
-        image.crop(croppedOutWidth, 0, camLeft, imageHeight)
+        image.crop(
+          croppedOutWidth,
+          0,
+          imageWidth - 2 * croppedOutWidth,
+          imageHeight
+        )
       }
 
       const croppedWidth = image.bitmap.width
@@ -65,9 +70,18 @@ const generatePreview = async (args: FormatPreviewRequest) => {
 
       // fill width
       image.resize(1080, Jimp.AUTO)
-      gameplayVerticalOffset = realCamHeight
+      const realGameplayHeight = image.bitmap.height
+      console.log({ realGameplayHeight, realCamHeight })
+
+      // position gameplay
+      if (realGameplayHeight + realCamHeight <= 1920) {
+        gameplayVerticalOffset = realCamHeight
+      } else {
+        const extraHeight = realGameplayHeight - (1920 - realCamHeight)
+        gameplayVerticalOffset = realCamHeight - extraHeight / 2
+      }
     } else {
-      // use these as min/max values for zoom slider
+      // min/max values for zoom slider
       const minRawGameplayWidth = (1080 / 1920) * imageHeight
       const maxRawGameplayWidth = imageWidth
       const rawGameplayWidth =
@@ -79,7 +93,7 @@ const generatePreview = async (args: FormatPreviewRequest) => {
 
       // fill width
       image.resize(1080, Jimp.AUTO)
-      const newGameplayHeight = image.bitmap.height
+      const realGameplayHeight = image.bitmap.height
       blurredBackground = image.clone()
       // fill height with background keeping aspect ratio
       blurredBackground.resize(Jimp.AUTO, 1920)
@@ -90,13 +104,20 @@ const generatePreview = async (args: FormatPreviewRequest) => {
         blurredBackground.crop(Math.round(extraWidth / 2), 0, 1080, 1920)
       }
       blurredBackground.blur(10)
-      gameplayVerticalOffset = (1920 - newGameplayHeight) / 2
+
+      // position gameplay
+      if (realGameplayHeight + realCamHeight <= 1920) {
+        gameplayVerticalOffset = realCamHeight
+      } else {
+        const extraHeight = realGameplayHeight - (1920 - realCamHeight)
+        gameplayVerticalOffset = realCamHeight - extraHeight / 2
+      }
     }
+    console.log({ gameplayVerticalOffset })
 
     blurredBackground?.composite(image, 0, gameplayVerticalOffset)
-    const buffer = await blurredBackground.getBase64Async(Jimp.MIME_PNG)
-    // console.log({ buffer: buffer.toString() })
-    return buffer.toString()
+    const buffer = await blurredBackground?.getBase64Async(Jimp.MIME_PNG)
+    return buffer?.toString()
   } catch (err) {
     // console.log('errrored')
     console.error(err)

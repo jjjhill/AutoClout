@@ -1,10 +1,7 @@
 import styled, { css } from 'styled-components'
-import Jimp from 'jimp'
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { store } from 'renderer/store'
 import { Rectangle } from './FacecamSelection'
-import useComponentSize from '@rehooks/component-size'
-import { ipcRenderer } from 'electron'
 import preview from 'workers/preview'
 
 interface ContainerProps {
@@ -16,6 +13,7 @@ const Container = styled.div`
   position: relative;
   flex: 1;
   min-height: 0;
+  max-width: 100%;
 
   ${({ previewWidth }: ContainerProps) =>
     previewWidth &&
@@ -35,9 +33,12 @@ const Container = styled.div`
     transform: translateX(calc(-50% - 1px));
     overflow: hidden;
     width: calc(100% + 1px);
-    max-width: calc(100% + 19px);
-    height: ${({ camPreviewHeight }: ContainerProps) =>
-      `${camPreviewHeight}px`};
+    max-width: calc(100% + 1px);
+    ${({ camPreviewHeight }: ContainerProps) =>
+      camPreviewHeight &&
+      css`
+        height: ${camPreviewHeight}px;
+      `}
     float: left;
   }
 `
@@ -52,30 +53,26 @@ export interface FormatPreviewRequest {
 
 interface Props {
   webcamCoords: Rectangle
+  previewWidth: number
+  previewHeight: number
+  realCamHeight: number
 }
 
 export type Side = 'left' | 'right'
 
-const realCamHeight = 450
-const Preview = ({ webcamCoords }: Props) => {
+const Preview = ({
+  webcamCoords,
+  previewHeight,
+  previewWidth,
+  realCamHeight,
+}: Props) => {
   const { left, width, height } = webcamCoords
-  const webcamAspect = width / height
   const [previewSrc, setPreviewSrc] = useState('')
-  const [previewWidth, setPreviewWidth] = useState<number>()
-  const [camPreviewHeight, setCamPreviewHeight] = useState<number>(200)
   const [zoomRatio, setZoomRatio] = useState(1)
   const {
     state: { screenshotURL },
   } = useContext(store)
-  const previewImageRef = useRef<HTMLImageElement>()
-  const previewSize = useComponentSize(previewImageRef)
-
-  useEffect(() => {
-    if (previewSize && previewSize.height > 0) {
-      setPreviewWidth((1080 / 1920) * previewSize.height)
-      setCamPreviewHeight((realCamHeight / 1920) * previewSize.height)
-    }
-  }, [previewSize])
+  const camPreviewHeight = (realCamHeight / 1920) * previewHeight
 
   const args: FormatPreviewRequest = useMemo(
     () => ({
@@ -101,13 +98,7 @@ const Preview = ({ webcamCoords }: Props) => {
     zoomRatio = 0.77,
     realCamHeight: number
   ) => {
-    // const formattedImg = await ipcRenderer.invoke('format-preview', {
-    //   screenshotURL,
-    //   camLeft,
-    //   camWidth,
-    //   zoomRatio,
-    //   realCamHeight,
-    // })
+    // in background worker
     const formattedImg = await preview.generatePreview({
       screenshotURL,
       camLeft,
@@ -121,7 +112,7 @@ const Preview = ({ webcamCoords }: Props) => {
 
   return (
     <Container previewWidth={previewWidth} camPreviewHeight={camPreviewHeight}>
-      <img ref={previewImageRef} src={previewSrc} />
+      <img src={previewSrc} />
       <div className="img-preview" />
     </Container>
   )

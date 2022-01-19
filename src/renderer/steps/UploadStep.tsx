@@ -28,6 +28,7 @@ const FlexRow = styled.div`
 const CenteredRow = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
   padding-top: 20px;
 `
 
@@ -118,7 +119,8 @@ const UploadStep = () => {
         .readFileSync(path.join(process.cwd(), imagePath))
         .toString('base64')
 
-      dispatch(Actions.setScreenshotURL(`data:image/jpg;base64,${base64}`))
+      // dispatch(Actions.setScreenshotURL(`data:image/jpg;base64,${base64}`))
+      dispatch(Actions.setScreenshotURL(path.join(process.cwd(), imagePath)))
       dispatch(Actions.setStep(UserStep.WEBCAM_SELECT))
     } catch (err) {
       console.error(err)

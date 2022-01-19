@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { useContext, useState } from 'react'
+import { useContext, useRef, useState } from 'react'
 import { colors } from 'renderer/constants'
 import FacecamSelection, {
   Rectangle,
@@ -7,8 +7,6 @@ import FacecamSelection, {
 import { store } from 'renderer/store'
 import Preview from 'renderer/components/Preview'
 import Button from '@mui/material/Button'
-
-interface ContainerProps {}
 
 const Container = styled.div`
   background: ${colors.darkGray};
@@ -22,6 +20,10 @@ const Container = styled.div`
   flex-direction: column;
 `
 
+interface ContainerProps {
+  previewWidth: number
+}
+
 const GridContainer = styled.div`
   flex: 1;
   min-height: 0;
@@ -33,7 +35,8 @@ const GridContainer = styled.div`
     'options options preview';
 
   grid-template-rows: repeat(3, 1fr);
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr ${({ previewWidth }: ContainerProps) =>
+      `${previewWidth}px`};
 
   #webcam-selection {
     grid-area: select;
@@ -60,7 +63,10 @@ const Footer = styled.div`
 const Positioning = styled.div``
 
 const WebcamSelectStep = () => {
-  const [clipLink, setClipLink] = useState('')
+  const realCamHeight = 500
+  const previewWidth = 400
+  const previewHeight = (1920 / 1080) * previewWidth
+
   const [facecamCoords, setFacecamCoords] = useState<Rectangle>({
     left: 0,
     top: 0,
@@ -71,17 +77,15 @@ const WebcamSelectStep = () => {
   const {
     state: { screenshotURL },
   } = useContext(store)
+  console.log({ screenshotURL })
 
   return (
     <Container>
-      <GridContainer>
+      <GridContainer previewWidth={previewWidth}>
         <div id="webcam-selection">
           <h3>Select Webcam</h3>
           <FacecamSelection
-            // imgSrc={screenshotURL}
-            imgSrc={
-              'https://www.kapwing.com/resources/content/images/2020/02/image---2020-02-19T092836.082.jpg'
-            }
+            imgSrc={screenshotURL}
             handleFacecamSelected={setFacecamCoords}
           />
         </div>
@@ -91,7 +95,12 @@ const WebcamSelectStep = () => {
         </Options>
         <div id="preview">
           <h3>Preview</h3>
-          <Preview webcamCoords={facecamCoords} />
+          <Preview
+            webcamCoords={facecamCoords}
+            previewHeight={previewHeight}
+            previewWidth={previewWidth}
+            realCamHeight={realCamHeight}
+          />
         </div>
       </GridContainer>
       <Footer>

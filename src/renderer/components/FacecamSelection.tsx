@@ -1,5 +1,5 @@
 import { Button } from '@mui/material'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactCropper from 'react-cropper'
 import 'cropperjs/dist/cropper.css'
 import omit from 'lodash.omit'
@@ -8,7 +8,7 @@ import Cropper from 'cropperjs'
 import styled from 'styled-components'
 
 const Container = styled.div`
-  width: 100%;
+  min-width: 100%;
   height: 100%;
 
   svg {

@@ -12,8 +12,6 @@ import invokeFormatScript from './ipc/nodejs-ipc'
 import { DownloadVideoRequest, FormatVideoRequest } from 'dto/format'
 import windowStateKeeper from '../windowStateKeeper'
 import downloadVideo from './downloadVideo'
-import generatePreview from './generatePreview'
-import { FormatPreviewRequest } from 'renderer/components/Preview'
 
 process.on('uncaughtException', function (error) {
   onLog(error)
@@ -66,12 +64,6 @@ ipcMain.handle('download-video', async (_, args: DownloadVideoRequest) => {
   const { outputFile, clipName } = await downloadVideo(args.clipLink)
 
   return { outputFile, clipName }
-})
-
-ipcMain.handle('format-preview', async (_, args: FormatPreviewRequest) => {
-  const result = await generatePreview(args)
-
-  return { result }
 })
 
 if (process.env.NODE_ENV === 'production') {

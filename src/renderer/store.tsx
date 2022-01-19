@@ -12,9 +12,11 @@ interface State {
 const initialState: State = {
   isWriting: false,
   page: Page.HOME,
+  // step: UserStep.UPLOAD,
   step: UserStep.WEBCAM_SELECT,
   screenshotURL:
-    'https://www.kapwing.com/resources/content/images/2020/02/image---2020-02-19T092836.082.jpg',
+    'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
+  //   'https://www.kapwing.com/resources/content/images/2020/02/image---2020-02-19T092836.082.jpg',
 }
 
 const store = createContext<State>(initialState)
