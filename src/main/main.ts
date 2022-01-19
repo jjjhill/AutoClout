@@ -1,14 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint global-require: off, no-console: off */
-
-/**
- * This module executes inside of electron's main process. You can start
- * electron renderer process from here and communicate with the other processes
- * through IPC.
- *
- * When running `npm run build` or `npm run build:main`, this file is compiled to
- * `./src/main.js` using webpack. This gives us some performance wins.
- */
 import 'core-js/stable'
 import 'regenerator-runtime/runtime'
 import path from 'path'
@@ -16,6 +7,13 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import { resolveHtmlPath } from './util'
+
+import invokeFormatScript from './ipc/nodejs-ipc'
+import { DownloadVideoRequest, FormatVideoRequest } from 'dto/format'
+import windowStateKeeper from '../windowStateKeeper'
+import downloadVideo from './downloadVideo'
+import generatePreview from './generatePreview'
+import { FormatPreviewRequest } from 'renderer/components/Preview'
 
 process.on('uncaughtException', function (error) {
   onLog(error)
@@ -28,11 +26,6 @@ const onLog = (message) => {
     }
   }, 5000)
 }
-
-import invokeFormatScript from './ipc/nodejs-ipc'
-import { DownloadVideoRequest, FormatVideoRequest } from 'dto/format'
-import windowStateKeeper from '../windowStateKeeper'
-import downloadVideo from './downloadVideo'
 
 export default class AppUpdater {
   constructor() {
@@ -73,6 +66,12 @@ ipcMain.handle('download-video', async (_, args: DownloadVideoRequest) => {
   const { outputFile, clipName } = await downloadVideo(args.clipLink)
 
   return { outputFile, clipName }
+})
+
+ipcMain.handle('format-preview', async (_, args: FormatPreviewRequest) => {
+  const result = await generatePreview(args)
+
+  return { result }
 })
 
 if (process.env.NODE_ENV === 'production') {
@@ -125,6 +124,7 @@ const createWindow = async () => {
       nodeIntegration: true,
       contextIsolation: false,
       webSecurity: false,
+      nodeIntegrationInWorker: true,
     },
   })
   mainWindowStateKeeper.track(mainWindow)

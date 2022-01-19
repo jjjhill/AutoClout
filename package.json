@@ -182,6 +182,7 @@
     "history": "4.x.x",
     "jimp": "^0.16.1",
     "lodash.omit": "^4.5.0",
+    "promise-worker": "^2.0.1",
     "python-shell": "^3.0.1",
     "react": "^17.0.2",
     "react-cropper": "^2.1.8",
@@ -191,7 +192,8 @@
     "regenerator-runtime": "^0.13.9",
     "socket.io": "^4.4.0",
     "styled-components": "^5.3.3",
-    "typescript-plugin-styled-components": "^2.0.0"
+    "typescript-plugin-styled-components": "^2.0.0",
+    "worker-loader": "^3.0.8"
   },
   "devEngines": {
     "node": ">=14.x",
