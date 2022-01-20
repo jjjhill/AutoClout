@@ -6,3 +6,7 @@
 # debug prod
 
 `DEBUG_PROD=true npm run package`
+
+# run locally
+
+`IMAGEMAGICK_BINARY="./bin/ImageMagick/magick.exe" npm start`
