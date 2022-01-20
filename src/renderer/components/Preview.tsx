@@ -106,7 +106,6 @@ const Preview = ({
       zoomRatio,
       realCamHeight,
     })
-    console.log({ formattedImg })
     setPreviewSrc(formattedImg)
   }
 

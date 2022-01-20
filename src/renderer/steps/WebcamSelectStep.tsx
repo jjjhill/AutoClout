@@ -7,6 +7,8 @@ import FacecamSelection, {
 import { store } from 'renderer/store'
 import Preview from 'renderer/components/Preview'
 import Button from '@mui/material/Button'
+import { ipcRenderer } from 'electron'
+import { FormatVideoRequest } from 'dto/format'
 
 const Container = styled.div`
   background: ${colors.darkGray};
@@ -62,6 +64,16 @@ const Footer = styled.div`
 
 const Positioning = styled.div``
 
+type RectCoords = [number, number, number, number]
+
+const formatVideo = (args: FormatVideoRequest) => {
+  ipcRenderer.invoke('format-video', args)
+}
+
+const toRectCoords: (rect: Rectangle) => RectCoords = (rect) => {
+  return [rect.left, rect.top, rect.left + rect.width, rect.top + rect.height]
+}
+
 const WebcamSelectStep = () => {
   const realCamHeight = 500
   const previewWidth = 400
@@ -73,17 +85,32 @@ const WebcamSelectStep = () => {
     width: 0,
     height: 0,
   })
-
   const {
-    state: { screenshotURL },
+    state: { downloadFilePath, videoLength, outputFilePath, screenshotURL },
   } = useContext(store)
-  console.log({ screenshotURL })
+
+  const handleNextClicked = () => {
+    console.log({
+      fileName: downloadFilePath,
+      username: '',
+      facecamCoords: toRectCoords(facecamCoords),
+      videoLength,
+      outputFilePath,
+    })
+    formatVideo({
+      fileName: downloadFilePath,
+      username: '',
+      facecamCoords: toRectCoords(facecamCoords),
+      videoLength,
+      outputFilePath,
+    })
+  }
 
   return (
     <Container>
       <GridContainer previewWidth={previewWidth}>
         <div id="webcam-selection">
-          <h3>Select Webcam</h3>
+          <h2>Select Webcam</h2>
           <FacecamSelection
             imgSrc={screenshotURL}
             handleFacecamSelected={setFacecamCoords}
@@ -94,7 +121,7 @@ const WebcamSelectStep = () => {
           <Positioning />
         </Options>
         <div id="preview">
-          <h3>Preview</h3>
+          <h2>Preview</h2>
           <Preview
             webcamCoords={facecamCoords}
             previewHeight={previewHeight}
@@ -104,7 +131,9 @@ const WebcamSelectStep = () => {
         </div>
       </GridContainer>
       <Footer>
-        <Button variant="contained">Next</Button>
+        <Button variant="contained" onClick={handleNextClicked}>
+          Next
+        </Button>
       </Footer>
     </Container>
   )

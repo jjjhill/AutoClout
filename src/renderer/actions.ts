@@ -3,6 +3,9 @@ export const ActionTypes = {
   SET_STEP: 'SET_STEP',
   SET_PAGE: 'SET_PAGE',
   SET_SCREENSHOT_URL: 'SET_SCREENSHOT_URL',
+  SET_DOWNLOAD_FILE_PATH: 'SET_DOWNLOAD_FILE_PATH',
+  SET_VIDEO_LENGTH: 'SET_VIDEO_LENGTH',
+  SET_OUTPUT_FILE_PATH: 'SET_OUTPUT_FILE_PATH',
 }
 
 const Actions = {
@@ -27,6 +30,24 @@ const Actions = {
   setScreenshotURL(payload) {
     return {
       type: ActionTypes.SET_SCREENSHOT_URL,
+      payload,
+    }
+  },
+  setDownloadFilePath(payload) {
+    return {
+      type: ActionTypes.SET_DOWNLOAD_FILE_PATH,
+      payload,
+    }
+  },
+  setVideoLength(payload) {
+    return {
+      type: ActionTypes.SET_VIDEO_LENGTH,
+      payload,
+    }
+  },
+  setOutputFilePath(payload) {
+    return {
+      type: ActionTypes.SET_OUTPUT_FILE_PATH,
       payload,
     }
   },

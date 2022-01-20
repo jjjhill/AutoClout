@@ -22,7 +22,7 @@ def blur(image):
 defaultOutputFile = os.getcwd() + '\\out\\' + str(time.time()) + '.mp4'
 
 
-def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378, 536), output=defaultOutputFile, videoLength=5):
+def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378, 536), output=defaultOutputFile, videoLength=1):
   # load mp4
   print('formatVideo called', flush=True)
 
@@ -50,15 +50,18 @@ def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378,
   twitchLogo = ImageClip(assetsPath + '/twitch.png')
   twitchLogo = resize(twitchLogo, (120, 120)).set_position((40+100, linksY))
 
-  twitchURL = TextClip(username, color='white', fontsize=75).set_position((180+100, linksY + 10))
-
-  final = CompositeVideoClip([
+  clips = [
       backgroundClip,
       mainClip,
       faceCamClip,
       twitchLogo,
-      twitchURL
-  ], size=(1080, 1920))
+  ]
+
+  if not username:
+    twitchURL = TextClip(username, color='white', fontsize=75).set_position((180+100, linksY + 10))
+    clips.append(twitchURL)
+
+  final = CompositeVideoClip(clips, size=(1080, 1920))
   final.save_frame("COMP.png")
 
   start = time.time()

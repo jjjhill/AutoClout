@@ -70,7 +70,6 @@ const Button = styled(ButtonSource)`
 
 const UploadStep = () => {
   const [clipLink, setClipLink] = useState('')
-  const [downloadFilePath, setDownloadFilePath] = useState('')
   const [clipName, setClipName] = useState('')
   const [videoLength, setVideoLength] = useState(5)
   const { dispatch } = useContext(store)
@@ -92,19 +91,19 @@ const UploadStep = () => {
       )
       setIsDownloading(false)
       console.log({ outputFile, name })
-      // const outputFile =
-      //   'C:\\Users\\Josh\\AutoClout\\clips\\DepressedNurturingSardineNotLikeThis-zTtPiMo7q6ZUdNnk.mp4'
-      // const tokens = outputFile.split('\\')
-      // const fileName = tokens[tokens.length - 1].split('.')[0]
       const imagePath = `images\\${name}.png`
-      setDownloadFilePath(outputFile)
       setClipName(name)
+      dispatch(
+        Actions.setOutputFilePath(
+          path.join(process.cwd(), 'out', `${name}.mp4`)
+        )
+      )
 
       ffmpeg.ffprobe(outputFile, (error, metadata) => {
         console.log({ error, metadata })
         const duration = metadata.format.duration
         console.log({ duration })
-        setVideoLength(Number(duration))
+        dispatch(Actions.setVideoLength(Number(duration)))
       })
 
       await extractFrames({
@@ -115,13 +114,14 @@ const UploadStep = () => {
           'build\\exe.win-amd64-3.9\\lib\\imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe',
       })
 
-      const base64 = fs
-        .readFileSync(path.join(process.cwd(), imagePath))
-        .toString('base64')
-
+      // const base64 = fs
+      //   .readFileSync(path.join(process.cwd(), imagePath))
+      //   .toString('base64')
       // dispatch(Actions.setScreenshotURL(`data:image/jpg;base64,${base64}`))
+
       dispatch(Actions.setScreenshotURL(path.join(process.cwd(), imagePath)))
       dispatch(Actions.setStep(UserStep.WEBCAM_SELECT))
+      dispatch(Actions.setDownloadFilePath(outputFile))
     } catch (err) {
       console.error(err)
       if (!validateClip(clipLink)) {

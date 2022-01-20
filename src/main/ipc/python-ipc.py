@@ -14,4 +14,4 @@ outputFilePath = sys.argv[7]
 videoLength = float(sys.argv[8])
 
 video.formatVideo(fileName, username=username, faceCamCoords=(
-    facecamX1, facecamY1, facecamX2, facecamY2), output=outputFilePath, videoLength=videoLength)
+    facecamX1, facecamY1, facecamX2, facecamY2), output=outputFilePath, videoLength=1)

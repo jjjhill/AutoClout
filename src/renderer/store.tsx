@@ -7,16 +7,21 @@ interface State {
   page: Page
   step: UserStep
   screenshotURL: string
+  downloadFilePath: string
+  outputFilePath: string
+  videoLength: number
 }
 
 const initialState: State = {
   isWriting: false,
   page: Page.HOME,
-  // step: UserStep.UPLOAD,
-  step: UserStep.WEBCAM_SELECT,
-  screenshotURL:
-    'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
-  //   'https://www.kapwing.com/resources/content/images/2020/02/image---2020-02-19T092836.082.jpg',
+  step: UserStep.UPLOAD,
+  // step: UserStep.WEBCAM_SELECT,
+  screenshotURL: '',
+  // 'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
+  downloadFilePath: '',
+  outputFilePath: '',
+  videoLength: 0,
 }
 
 const store = createContext<State>(initialState)
@@ -46,6 +51,21 @@ const StateProvider = ({ children }) => {
         return {
           ...state,
           screenshotURL: payload,
+        }
+      case ActionTypes.SET_DOWNLOAD_FILE_PATH:
+        return {
+          ...state,
+          downloadFilePath: payload,
+        }
+      case ActionTypes.SET_VIDEO_LENGTH:
+        return {
+          ...state,
+          videoLength: payload,
+        }
+      case ActionTypes.SET_OUTPUT_FILE_PATH:
+        return {
+          ...state,
+          outputFilePath: payload,
         }
       default:
         throw new Error(`Unhandled action type: ${type}`)
