@@ -19,6 +19,7 @@ const generatePreview = async (args: FormatPreviewRequest) => {
     const image = await Jimp.read(screenshotURL)
     const imageWidth = image.bitmap.width
     const imageHeight = image.bitmap.height
+    console.log({ imageWidth, imageHeight })
 
     const side: Side = camLeft < imageWidth / 2 ? 'left' : 'right'
 
@@ -31,6 +32,12 @@ const generatePreview = async (args: FormatPreviewRequest) => {
     const croppedImageWidth = imageWidth - croppedOutWidth * 2
     const scaledWidth = (1920 / imageHeight) * croppedImageWidth
     const canCropOutWebcam = scaledWidth >= 1080
+    console.log({
+      croppedOutWidth,
+      croppedImageWidth,
+      scaledWidth,
+      canCropOutWebcam,
+    })
     let blurredBackground, gameplayVerticalOffset
 
     if (canCropOutWebcam) {
@@ -39,7 +46,7 @@ const generatePreview = async (args: FormatPreviewRequest) => {
         image.crop(
           camLeft + camWidth,
           0,
-          imageWidth - 2 * camWidth,
+          imageWidth - 2 * croppedOutWidth,
           imageHeight
         )
       } else {
@@ -50,7 +57,6 @@ const generatePreview = async (args: FormatPreviewRequest) => {
           imageHeight
         )
       }
-
       const croppedWidth = image.bitmap.width
       const croppedHeight = image.bitmap.height
       const croppedRatio = croppedWidth / croppedHeight
@@ -62,7 +68,6 @@ const generatePreview = async (args: FormatPreviewRequest) => {
         blurredBackground = image.clone()
         //keep aspect ratio resize
         blurredBackground.resize(Jimp.AUTO, 1920)
-
         blurredBackground.crop(Math.round(extraWidth / 2), 0, 1080, 1920)
         blurredBackground.blur(10)
       }
@@ -72,10 +77,27 @@ const generatePreview = async (args: FormatPreviewRequest) => {
       const realGameplayHeight = image.bitmap.height
 
       // position gameplay
+      // if (realGameplayHeight + realCamHeight <= 1920) {
+      //   gameplayVerticalOffset = realCamHeight
+      // } else {
+      //   const extraHeight = realGameplayHeight - (1920 - realCamHeight)
+      //   gameplayVerticalOffset = realCamHeight - extraHeight / 2
+      // }
+      // const contentHeight = 1920 - realCamHeight
+      const extraHeight = 1920 - realGameplayHeight
+      // position gameplay
       if (realGameplayHeight + realCamHeight <= 1920) {
-        gameplayVerticalOffset = realCamHeight
+        // there is extra content space
+        // const extraContentHeight = contentHeight - realGameplayHeight
+        if (realCamHeight < extraHeight / 2) {
+          // shift gameplay down to center screen
+          gameplayVerticalOffset = extraHeight / 2
+        } else {
+          // put gameplay directly under cam
+          gameplayVerticalOffset = realCamHeight
+        }
       } else {
-        const extraHeight = realGameplayHeight - (1920 - realCamHeight)
+        // gameplay too tall, shift gameplay up
         gameplayVerticalOffset = realCamHeight - extraHeight / 2
       }
     } else {
@@ -103,11 +125,21 @@ const generatePreview = async (args: FormatPreviewRequest) => {
       }
       blurredBackground.blur(10)
 
+      // const contentHeight = 1920 - realCamHeight
+      const extraHeight = 1920 - realGameplayHeight
       // position gameplay
       if (realGameplayHeight + realCamHeight <= 1920) {
-        gameplayVerticalOffset = realCamHeight
+        // there is extra content space
+        // const extraContentHeight = contentHeight - realGameplayHeight
+        if (realCamHeight < extraHeight / 2) {
+          // shift gameplay down to center screen
+          gameplayVerticalOffset = extraHeight / 2
+        } else {
+          // put gameplay directly under cam
+          gameplayVerticalOffset = realCamHeight
+        }
       } else {
-        const extraHeight = realGameplayHeight - (1920 - realCamHeight)
+        // gameplay too tall, shift gameplay up
         gameplayVerticalOffset = realCamHeight - extraHeight / 2
       }
     }

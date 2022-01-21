@@ -1,16 +1,22 @@
 import { PythonShell } from 'python-shell'
 import { exec } from 'child_process'
+import { FormatVideoRequest } from 'dto/format'
 
 const invokeFormatScript = (
-  fileName: string,
-  username: string,
-  facecamCoords: [number, number, number, number],
+  args: FormatVideoRequest,
   onLog: (message: string) => void,
   onStartVideoWrite: () => void,
-  onEndVideoWrite: () => void,
-  outputFilePath: string,
-  videoLength: number
+  onEndVideoWrite: () => void
 ) => {
+  const {
+    fileName,
+    username,
+    facecamCoords,
+    outputFilePath,
+    videoLength,
+    realCamHeight,
+    zoomRatio,
+  } = args
   if (process.env.NODE_ENV === 'development') {
     const options = {
       args: [
@@ -19,6 +25,8 @@ const invokeFormatScript = (
         ...facecamCoords.map((x) => x.toString()),
         outputFilePath,
         videoLength.toString(),
+        realCamHeight,
+        zoomRatio,
       ],
     }
     const pyshell = new PythonShell('./src/main/ipc/python-ipc.py', options)
@@ -38,7 +46,7 @@ const invokeFormatScript = (
     exec(
       `SET IMAGEMAGICK_BINARY=.\\resources\\bin\\ImageMagick\\magick.exe && SET PY_ENV=production && .\\resources\\build\\exe.win-amd64-3.9\\python-ipc.exe ${fileName} ${username} ${facecamCoords
         .map((x) => x.toString())
-        .join(' ')} ${outputFilePath} ${videoLength}`,
+        .join(' ')} ${outputFilePath} ${videoLength} ${realCamHeight}`,
       (err, stdOut, stdErr) => {
         onLog(JSON.stringify(err, null, 2))
         onLog(stdOut.toString())

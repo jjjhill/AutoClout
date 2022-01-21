@@ -21,6 +21,7 @@ const Layout = styled.div`
   display: flex;
   padding: 20px;
   min-height: 0;
+  overflow: auto;
 `
 
 const Content = styled.div`

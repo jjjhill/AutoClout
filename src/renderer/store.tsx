@@ -15,10 +15,10 @@ interface State {
 const initialState: State = {
   isWriting: false,
   page: Page.HOME,
-  step: UserStep.UPLOAD,
-  // step: UserStep.WEBCAM_SELECT,
-  screenshotURL: '',
-  // 'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
+  // step: UserStep.UPLOAD,
+  step: UserStep.WEBCAM_SELECT,
+  screenshotURL:
+    'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
   downloadFilePath: '',
   outputFilePath: '',
   videoLength: 0,

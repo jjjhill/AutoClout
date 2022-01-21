@@ -44,20 +44,7 @@ const onEndVideoWrite = () => {
 }
 
 ipcMain.handle('format-video', async (_, args: FormatVideoRequest) => {
-  const { fileName, username, facecamCoords, videoLength, outputFilePath } =
-    args
-  console.log({ fileName, username, facecamCoords })
-  invokeFormatScript(
-    fileName,
-    username,
-    facecamCoords,
-    onLog,
-    onStartVideoWrite,
-    onEndVideoWrite,
-    outputFilePath,
-    // videoLength
-    5
-  )
+  invokeFormatScript(args, onLog, onStartVideoWrite, onEndVideoWrite)
 })
 
 ipcMain.handle('download-video', async (_, args: DownloadVideoRequest) => {

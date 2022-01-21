@@ -15,11 +15,12 @@ const Container = styled.div`
   margin: 30px 20px 0;
   border-radius: 16px;
   color: white;
-  padding: 16px 24px;
+  padding: 16px 40px;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  min-width: 1000px;
 `
 
 interface ContainerProps {
@@ -30,7 +31,7 @@ const GridContainer = styled.div`
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-gap: 40px;
+  grid-gap: 60px;
   grid-template-areas:
     'select select preview'
     'select select preview'
@@ -59,7 +60,7 @@ const Options = styled.div`
 const Footer = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-top: 15px;
+  padding-top: 35px;
 `
 
 const Positioning = styled.div``
@@ -76,8 +77,9 @@ const toRectCoords: (rect: Rectangle) => RectCoords = (rect) => {
 
 const WebcamSelectStep = () => {
   const realCamHeight = 500
-  const previewWidth = 400
+  const previewWidth = 300
   const previewHeight = (1920 / 1080) * previewWidth
+  const [zoomRatio, setZoomRatio] = useState(0)
 
   const [facecamCoords, setFacecamCoords] = useState<Rectangle>({
     left: 0,
@@ -90,25 +92,26 @@ const WebcamSelectStep = () => {
   } = useContext(store)
 
   const handleNextClicked = () => {
-    console.log({
+    const { width, height } = facecamCoords
+    const camAspect = width / height
+    const args = {
       fileName: downloadFilePath,
       username: '',
       facecamCoords: toRectCoords(facecamCoords),
       videoLength,
       outputFilePath,
-    })
-    formatVideo({
-      fileName: downloadFilePath,
-      username: '',
-      facecamCoords: toRectCoords(facecamCoords),
-      videoLength,
-      outputFilePath,
-    })
+      realCamHeight:
+        camAspect > 1080 / realCamHeight ? 1080 / camAspect : realCamHeight,
+      zoomRatio,
+    }
+
+    console.log(args)
+    formatVideo(args)
   }
 
   return (
     <Container>
-      <GridContainer previewWidth={previewWidth}>
+      <GridContainer previewWidth={previewWidth + 10}>
         <div id="webcam-selection">
           <h2>Select Webcam</h2>
           <FacecamSelection
@@ -121,12 +124,13 @@ const WebcamSelectStep = () => {
           <Positioning />
         </Options>
         <div id="preview">
-          <h2>Preview</h2>
+          <h2 style={{ marginBottom: '40px' }}>Preview</h2>
           <Preview
             webcamCoords={facecamCoords}
             previewHeight={previewHeight}
             previewWidth={previewWidth}
             realCamHeight={realCamHeight}
+            zoomRatio={zoomRatio}
           />
         </div>
       </GridContainer>

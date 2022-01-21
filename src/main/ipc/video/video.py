@@ -22,44 +22,117 @@ def blur(image):
 defaultOutputFile = os.getcwd() + '\\out\\' + str(time.time()) + '.mp4'
 
 
-def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378, 536), output=defaultOutputFile, videoLength=1):
+def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378, 536), output=defaultOutputFile, videoLength=1, realCamHeight=400, zoomRatio=1):
   # load mp4
   print('formatVideo called', flush=True)
+  print('realCamHeight: ', realCamHeight, flush=True)
 
   main = VideoFileClip(fileName)
+  camLeft = faceCamCoords[0]
+  camWidth = faceCamCoords[2] - faceCamCoords[0]
+  (imageWidth, imageHeight) = main.size
+
+  side = 'left' if camLeft < imageWidth / 2 else 'right'
+
+  if side == 'left':
+    croppedOutWidth = camLeft + camWidth
+  else:
+    croppedOutWidth = imageWidth - camLeft
+
+  croppedImageWidth = imageWidth - croppedOutWidth * 2
+  scaledWidth = (1920 / imageHeight) * croppedImageWidth
+  canCropOutWebcam = scaledWidth >= 1080
 
   faceCamClip = crop(main, faceCamCoords[0], faceCamCoords[1], faceCamCoords[2], faceCamCoords[3])
-  faceCamClip = margin(faceCamClip, None, 0, 0, 20, 0, (0, 0, 0), 0)
-  faceCamClip = resize(faceCamClip, None, None, 900).set_position(("center", "top"))
+  # faceCamClip = margin(faceCamClip, None, 0, 0, 20, 0, (0, 0, 0), 0)
+  faceCamClip = resize(faceCamClip, None, realCamHeight, None).set_position(("center", "top"))
   (_, facecamHeight) = faceCamClip.size
+  print(realCamHeight, facecamHeight, flush=True)
+  if canCropOutWebcam:
+    # crop out webcam
+    if side == 'left':
+      main = crop(
+          main,
+          camLeft + camWidth,
+          0,
+          imageWidth - croppedOutWidth,
+          imageHeight
+      )
+    else:
+      main = crop(
+          main,
+          croppedOutWidth,
+          0,
+          imageWidth - croppedOutWidth,
+          imageHeight
+      )
 
-  (originalWidth, originalHeight) = main.size
+    (croppedWidth, croppedHeight) = main.size
+    croppedRatio = croppedWidth / croppedHeight
 
-  mainClip = crop(main, 378, 0, originalWidth-378, originalHeight)
-  mainClip = resize(mainClip, None, None, 1080).set_position((0, facecamHeight))
-  (_, mainClipHeight) = mainClip.size
+    backgroundWidth = int(round(croppedRatio * 1920))
+    extraWidth = backgroundWidth - 1080
 
-  mainClip.save_frame("MAIN.png")
+    if extraWidth > 0:
+      # keep aspect ratio resize
+      backgroundClip = resize(main, None, 200, None)
+      backgroundClip = backgroundClip.fl_image(blur)
+      backgroundClip = resize(backgroundClip, None, 1920, None).set_position(("center", "center"))
+      backgroundClip.save_frame("backgroundClip.png")
 
-  backgroundClip = resize(main, None, 200, None)
-  backgroundClip = backgroundClip.fl_image(blur)
-  backgroundClip = resize(backgroundClip, None, 1920, None).set_position(("center", "center"))
-  backgroundClip.save_frame("backgroundClip.png")
+    # fill width
+    main = resize(main, None, None, 1080)
+    (_, realGameplayHeight) = main.size
+    extraHeight = 1920 - realGameplayHeight
 
-  linksY = facecamHeight + mainClipHeight
-  twitchLogo = ImageClip(assetsPath + '/twitch.png')
-  twitchLogo = resize(twitchLogo, (120, 120)).set_position((40+100, linksY))
+  else:
+    # min/max values for zoom slider
+    minRawGameplayWidth = (1080 / 1920) * imageHeight
+    maxRawGameplayWidth = imageWidth
+    rawGameplayWidth = minRawGameplayWidth + (maxRawGameplayWidth - minRawGameplayWidth) * (1 - zoomRatio)
 
+    extra = imageWidth - rawGameplayWidth
+    main = crop(main, extra / 2, 0, imageWidth - extra / 2, imageHeight)
+
+    # fill width
+    main = resize(main, None, None, 1080)
+    (_, realGameplayHeight) = main.size
+
+    backgroundClip = resize(main, None, 200, None)
+    backgroundClip = backgroundClip.fl_image(blur)
+    backgroundClip = resize(backgroundClip, None, 1920, None).set_position(("center", "center"))
+    backgroundClip.save_frame("backgroundClip.png")
+
+  extraHeight = 1920 - realGameplayHeight
+  # position gameplay
+  if realGameplayHeight + realCamHeight <= 1920:
+    # there is extra content space
+    if realCamHeight < extraHeight / 2:
+      # shift gameplay down to center screen
+      gameplayVerticalOffset = extraHeight / 2
+    else:
+      # put gameplay directly under cam
+      gameplayVerticalOffset = realCamHeight
+  else:
+    # gameplay too tall, shift gameplay up
+    gameplayVerticalOffset = realCamHeight - extraHeight / 2
+
+  print(realCamHeight, realGameplayHeight, gameplayVerticalOffset, flush=True)
+
+  # linksY = facecamHeight + mainClipHeight
+  # twitchLogo = ImageClip(assetsPath + '/twitch.png')
+  # twitchLogo = resize(twitchLogo, (120, 120)).set_position((40+100, linksY))
+  main = main.set_position((0, gameplayVerticalOffset))
   clips = [
       backgroundClip,
-      mainClip,
+      main,
       faceCamClip,
-      twitchLogo,
+      # twitchLogo,
   ]
 
-  if not username:
-    twitchURL = TextClip(username, color='white', fontsize=75).set_position((180+100, linksY + 10))
-    clips.append(twitchURL)
+  # if not username:
+  #   twitchURL = TextClip(username, color='white', fontsize=75).set_position((180+100, linksY + 10))
+  #   clips.append(twitchURL)
 
   final = CompositeVideoClip(clips, size=(1080, 1920))
   final.save_frame("COMP.png")

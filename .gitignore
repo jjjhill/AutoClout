@@ -4,6 +4,7 @@ build/
 clips/
 *.png
 *.mp4
+**/__pycache__/
 
 # Logs
 logs
