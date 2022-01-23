@@ -1,15 +1,11 @@
-import { Button } from '@mui/material'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactCropper from 'react-cropper'
 import 'cropperjs/dist/cropper.css'
-import omit from 'lodash.omit'
-import Cropper from 'cropperjs'
 
 import styled from 'styled-components'
 
 const Container = styled.div`
   min-width: 100%;
-  height: 100%;
 
   svg {
     max-height: 100%;
@@ -41,7 +37,7 @@ const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
   const getCropData = () => {
     const cropper = cropperRef?.current?.cropper
 
-    if (typeof cropper !== 'undefined') {
+    if (typeof cropper !== 'undefined' && cropper.getCroppedCanvas()) {
       const croppedCanvas = cropper.getCroppedCanvas()
       const data = cropper.getData()
       const { x, y, width, height } = data
@@ -62,6 +58,10 @@ const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
       handleFacecamSelected(position)
     }
   }
+
+  useEffect(() => {
+    setTimeout(() => getCropData(), 500)
+  }, [])
 
   return (
     <Container>

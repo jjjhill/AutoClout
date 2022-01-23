@@ -10,18 +10,20 @@ interface State {
   downloadFilePath: string
   outputFilePath: string
   videoLength: number
+  imageDimensions: { width: number; height: number }
 }
 
 const initialState: State = {
   isWriting: false,
   page: Page.HOME,
-  // step: UserStep.UPLOAD,
-  step: UserStep.WEBCAM_SELECT,
-  screenshotURL:
-    'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
+  step: UserStep.IMPORT_CLIP,
+  // step: UserStep.WEBCAM_SELECT,
+  screenshotURL: '',
+  // 'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
   downloadFilePath: '',
   outputFilePath: '',
   videoLength: 0,
+  imageDimensions: { width: 0, height: 0 },
 }
 
 const store = createContext<State>(initialState)
@@ -66,6 +68,11 @@ const StateProvider = ({ children }) => {
         return {
           ...state,
           outputFilePath: payload,
+        }
+      case ActionTypes.SET_IMAGE_DIMENSIONS:
+        return {
+          ...state,
+          imageDimensions: payload,
         }
       default:
         throw new Error(`Unhandled action type: ${type}`)

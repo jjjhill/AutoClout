@@ -6,6 +6,7 @@ export const ActionTypes = {
   SET_DOWNLOAD_FILE_PATH: 'SET_DOWNLOAD_FILE_PATH',
   SET_VIDEO_LENGTH: 'SET_VIDEO_LENGTH',
   SET_OUTPUT_FILE_PATH: 'SET_OUTPUT_FILE_PATH',
+  SET_IMAGE_DIMENSIONS: 'SET_IMAGE_DIMENSIONS',
 }
 
 const Actions = {
@@ -48,6 +49,12 @@ const Actions = {
   setOutputFilePath(payload) {
     return {
       type: ActionTypes.SET_OUTPUT_FILE_PATH,
+      payload,
+    }
+  },
+  setImageDimensions(payload) {
+    return {
+      type: ActionTypes.SET_IMAGE_DIMENSIONS,
       payload,
     }
   },

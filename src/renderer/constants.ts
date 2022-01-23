@@ -10,7 +10,7 @@ export enum Page {
 }
 
 export enum UserStep {
-  UPLOAD = 0,
+  IMPORT_CLIP = 0,
   WEBCAM_SELECT,
-  OTHER_OPTIONS,
+  SOCIALS,
 }

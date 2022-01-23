@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components'
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import debounce from 'lodash.debounce'
 import { store } from 'renderer/store'
 import { Rectangle } from './FacecamSelection'
 import preview from 'workers/preview'
@@ -16,6 +17,7 @@ const Container = styled.div`
   flex: 1;
   min-height: 0;
   max-width: 100%;
+  /* border-radius: 30px; */
 
   ${({ previewWidth }: ContainerProps) =>
     previewWidth &&
@@ -24,27 +26,37 @@ const Container = styled.div`
     `}
 
   .preview {
-    border-radius: 10px;
+    /* border-radius: 30px; */
     width: 100%;
     max-width: 100%;
   }
 
-  .img-preview {
-    max-width: 100%;
-    max-height: 100%;
+  .crop-preview-container {
+    width: 100%;
+    height: 100%;
     position: absolute;
     top: 0;
-    left: 50%;
-    transform: translateX(calc(-50% - 1px));
+    left: 0;
+    /* border-radius: 30px; */
     overflow: hidden;
-    width: calc(100% + 2px);
-    ${({ camPreviewHeight }: ContainerProps) =>
-      camPreviewHeight &&
-      css`
-        height: ${camPreviewHeight}px;
-      `}
-    float: left;
-    z-index: 1;
+
+    .img-preview {
+      max-width: 100%;
+      max-height: 100%;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(calc(-50% - 1px));
+      overflow: hidden;
+      width: calc(100% + 2px);
+      ${({ camPreviewHeight }: ContainerProps) =>
+        camPreviewHeight &&
+        css`
+          height: ${camPreviewHeight}px;
+        `}
+      float: left;
+      z-index: 1;
+    }
   }
 
   .phone-border {
@@ -56,9 +68,9 @@ const Container = styled.div`
         position: absolute;
         top: 0;
         left: 0;
-        width: calc(${previewWidth}px + 48px);
-        height: calc(${previewHeight}px + 43px);
-        transform: translate(-30px, -20px);
+        width: calc(${previewWidth}px + 35px);
+        height: calc(${previewHeight}px + 28px);
+        transform: translate(-17px, -14px);
         z-index: 2;
       `}
   }
@@ -115,12 +127,19 @@ const Preview = ({
     }
   }, [args])
 
-  const formatScreenshot = async (args: FormatPreviewRequest) => {
-    console.log({ realCamHeight: args.realCamHeight })
-    // in background worker
-    const formattedImg = await preview.generatePreview(args)
-    setPreviewSrc(formattedImg)
-  }
+  const formatScreenshot = useCallback(
+    debounce(
+      async (args: FormatPreviewRequest) => {
+        console.log({ realCamHeight: args.realCamHeight })
+        // in background worker
+        const formattedImg = await preview.generatePreview(args)
+        setPreviewSrc(formattedImg)
+      },
+      1000,
+      { leading: true }
+    ),
+    []
+  )
 
   return (
     <Container
@@ -128,9 +147,11 @@ const Preview = ({
       previewHeight={previewHeight}
       camPreviewHeight={camPreviewHeight}
     >
-      <img src={iphoneSrc} className="phone-border" />
+      {/* <img src={iphoneSrc} className="phone-border" /> */}
       <img src={previewSrc} className="preview" />
-      <div className="img-preview" />
+      <div className="crop-preview-container">
+        <div className="img-preview" />
+      </div>
     </Container>
   )
 }

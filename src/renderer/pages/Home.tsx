@@ -3,7 +3,7 @@ import { store } from 'renderer/store'
 import { useContext } from 'react'
 import { colors, UserStep } from 'renderer/constants'
 import Navigation from 'renderer/components/Navigation'
-import UploadStep from 'renderer/steps/UploadStep'
+import UploadStep from 'renderer/steps/ImportStep'
 import Stepper from '@mui/material/Stepper'
 import StepLabelSource from '@mui/material/StepLabel'
 import Step from '@mui/material/Step'
@@ -14,6 +14,7 @@ import UploadIcon from '@mui/icons-material/FileUpload'
 import EditIcon from '@mui/icons-material/ModeEditOutline'
 import SettingsIcon from '@mui/icons-material/SettingsSuggest'
 import WebcamSelectStep from 'renderer/steps/WebcamSelectStep'
+import SocialsStep from 'renderer/steps/SocialsStep'
 
 const Layout = styled.div`
   flex: 1;
@@ -131,8 +132,9 @@ const Home = () => {
             ))}
           </Stepper>
         </StepperContainer>
-        {step === UserStep.UPLOAD && <UploadStep />}
+        {step === UserStep.IMPORT_CLIP && <UploadStep />}
         {step === UserStep.WEBCAM_SELECT && <WebcamSelectStep />}
+        {step === UserStep.SOCIALS && <SocialsStep />}
       </Content>
     </Layout>
   )

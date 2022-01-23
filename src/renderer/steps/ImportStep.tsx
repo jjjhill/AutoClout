@@ -68,7 +68,7 @@ const Button = styled(ButtonSource)`
   }
 `
 
-const UploadStep = () => {
+const ImportStep = () => {
   const [clipLink, setClipLink] = useState('')
   const [clipName, setClipName] = useState('')
   const [videoLength, setVideoLength] = useState(5)
@@ -104,6 +104,8 @@ const UploadStep = () => {
         const duration = metadata.format.duration
         console.log({ duration })
         dispatch(Actions.setVideoLength(Number(duration)))
+        const { width, height } = metadata.streams?.[0]
+        dispatch(Actions.setImageDimensions({ width, height }))
       })
 
       await extractFrames({
@@ -154,4 +156,4 @@ const UploadStep = () => {
   )
 }
 
-export default UploadStep
+export default ImportStep

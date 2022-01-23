@@ -181,6 +181,7 @@
     "fluent-ffmpeg": "jjjhill/node-fluent-ffmpeg",
     "history": "4.x.x",
     "jimp": "^0.16.1",
+    "lodash.debounce": "^4.0.8",
     "lodash.omit": "^4.5.0",
     "promise-worker": "^2.0.1",
     "python-shell": "^3.0.1",

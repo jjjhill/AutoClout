@@ -16,4 +16,4 @@ realCamHeight = float(sys.argv[9])
 zoomRatio = float(sys.argv[10])
 
 video.formatVideo(fileName, username=username, faceCamCoords=(
-    facecamX1, facecamY1, facecamX2, facecamY2), output=outputFilePath, videoLength=1, realCamHeight=realCamHeight, zoomRatio=zoomRatio)
+    facecamX1, facecamY1, facecamX2, facecamY2), output=outputFilePath, videoLength=2, realCamHeight=realCamHeight, zoomRatio=zoomRatio)
