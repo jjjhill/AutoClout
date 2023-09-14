@@ -1,5 +1,12 @@
 import styled, { css } from 'styled-components'
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ChangeEvent,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { colors, UserStep } from 'renderer/constants'
 import FacecamSelection, {
   Rectangle,
@@ -10,7 +17,9 @@ import Button from '@mui/material/Button'
 import { ipcRenderer } from 'electron'
 import { FormatVideoRequest } from 'dto/format'
 import SliderSource from '@mui/material/Slider'
-import Actions from 'renderer/actions'
+import Actions from 'renderer/Actions'
+import Switch from '@mui/material/Switch'
+import { CropData } from 'renderer/pages/Home'
 
 const Container = styled.div`
   background: ${colors.darkGray};
@@ -23,6 +32,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-width: 1000px;
+  min-height: 800px;
 `
 
 const Slider = styled(SliderSource)`
@@ -46,12 +56,16 @@ const GridContainer = styled.div`
     'select select preview'
     'options options preview';
 
-  grid-template-rows: 1fr 1fr minmax(150px, 1fr);
+  grid-template-rows: repeat(3, minmax(150px, 1fr));
   grid-template-columns: 1fr 1fr ${({ previewWidth }: ContainerProps) =>
       `${previewWidth}px`};
 
   #webcam-selection {
     grid-area: select;
+
+    .MuiSwitch-root {
+      margin-left: 10px;
+    }
   }
 
   #options-container {
@@ -84,6 +98,11 @@ const Footer = styled.div`
   padding-top: 35px;
 `
 
+const FlexRow = styled.div`
+  display: flex;
+  align-items: center;
+`
+
 const Positioning = styled.div``
 
 type RectCoords = [number, number, number, number]
@@ -96,21 +115,42 @@ const toRectCoords: (rect: Rectangle) => RectCoords = (rect) => {
   return [rect.left, rect.top, rect.left + rect.width, rect.top + rect.height]
 }
 
-const WebcamSelectStep = () => {
-  const realCamHeight = 500
-  const previewWidth = 350
-  const previewHeight = (1920 / 1080) * previewWidth
+interface Props {
+  realCamHeight: number
+  previewWidth: number
+  previewHeight: number
+  setSliderValue: (val: number) => void
+  sliderChanged: boolean
+  setSliderChanged: (val: boolean) => void
+  zoomRatio: number
+  facecamCoords: Rectangle
+  setFacecamCoords: (rect: Rectangle) => void
+  camEnabled: boolean
+  setCamEnabled: (val: boolean) => void
+  sliderValue: number
+  defaultSliderValue: number
+  setCropData: (data: CropData) => void
+}
 
-  const defaultSliderValue = 50
-  const [sliderValue, setSliderValue] = useState(defaultSliderValue)
-  const [sliderChanged, setSliderChanged] = useState(false)
-  const zoomRatio = useMemo(() => sliderValue / 100, [sliderValue])
-  const [facecamCoords, setFacecamCoords] = useState<Rectangle>({
-    left: 0,
-    top: 0,
-    width: 0,
-    height: 0,
-  })
+const WebcamSelectStep = ({
+  realCamHeight,
+  previewWidth,
+  previewHeight,
+  setSliderValue,
+  sliderChanged,
+  setSliderChanged,
+  zoomRatio,
+  facecamCoords,
+  setFacecamCoords,
+  camEnabled,
+  setCamEnabled,
+  sliderValue,
+  defaultSliderValue,
+  setCropData,
+}: Props) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setCamEnabled(event.target.checked)
+  }
 
   const {
     dispatch,
@@ -169,14 +209,15 @@ const WebcamSelectStep = () => {
   const handleNextClicked = () => {
     const { width, height } = facecamCoords
     const camAspect = width / height
+    const camHeight =
+      camAspect > 1080 / realCamHeight ? 1080 / camAspect : realCamHeight
     const args = {
       fileName: downloadFilePath,
       username: '',
       facecamCoords: toRectCoords(facecamCoords),
       videoLength,
       outputFilePath,
-      realCamHeight:
-        camAspect > 1080 / realCamHeight ? 1080 / camAspect : realCamHeight,
+      realCamHeight: camEnabled ? camHeight : 0,
       zoomRatio,
     }
 
@@ -195,7 +236,7 @@ const WebcamSelectStep = () => {
               label: 'Optimal',
             },
           ]
-        : undefined,
+        : false,
     [optimalZoomRatio]
   )
   console.log({ marks })
@@ -203,10 +244,17 @@ const WebcamSelectStep = () => {
     <Container>
       <GridContainer previewWidth={previewWidth + 10}>
         <div id="webcam-selection">
-          <h2>Select Webcam</h2>
+          <FlexRow>
+            <h2>Select Webcam</h2>
+            <Switch checked={camEnabled} onChange={handleChange} label="On" />
+          </FlexRow>
+
           <FacecamSelection
             imgSrc={screenshotURL}
             handleFacecamSelected={setFacecamCoords}
+            imageDimensions={imageDimensions}
+            camEnabled={camEnabled}
+            setCropData={setCropData}
           />
         </div>
         <div id="options-container">
@@ -247,6 +295,7 @@ const WebcamSelectStep = () => {
             previewWidth={previewWidth}
             realCamHeight={realCamHeight}
             zoomRatio={zoomRatio}
+            camEnabled={camEnabled}
           />
         </div>
       </GridContainer>

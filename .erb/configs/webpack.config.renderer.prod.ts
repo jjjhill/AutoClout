@@ -14,6 +14,11 @@ import baseConfig from './webpack.config.base'
 import webpackPaths from './webpack.paths'
 import checkNodeEnv from '../scripts/check-node-env'
 import deleteSourceMaps from '../scripts/delete-source-maps'
+// import ffprobeStatic from 'ffprobe-static'
+import log from 'electron-log'
+import CopyPlugin from 'copy-webpack-plugin'
+
+// log.info({ FFPROBE_PATH: ffprobeStatic.path })
 
 checkNodeEnv('production')
 deleteSourceMaps()
@@ -137,8 +142,11 @@ export default merge(baseConfig, {
       isBrowser: false,
       isDevelopment: process.env.NODE_ENV !== 'production',
     }),
-    new webpack.EnvironmentPlugin({
-      FLUENTFFMPEG_COV: '',
-    }),
+    // new webpack.EnvironmentPlugin({
+    //   FLUENTFFMPEG_COV: '',
+    //   // FFMPEG_PATH:
+    //   //   'build\\exe.win-amd64-3.9\\lib\\imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe',
+    //   FFPROBE_PATH: ffprobeStatic.path,
+    // }),
   ],
 })

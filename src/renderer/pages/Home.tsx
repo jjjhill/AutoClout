@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { store } from 'renderer/store'
-import { useContext } from 'react'
+import { useContext, useState, useMemo } from 'react'
 import { colors, UserStep } from 'renderer/constants'
 import Navigation from 'renderer/components/Navigation'
 import UploadStep from 'renderer/steps/ImportStep'
@@ -15,6 +15,9 @@ import EditIcon from '@mui/icons-material/ModeEditOutline'
 import SettingsIcon from '@mui/icons-material/SettingsSuggest'
 import WebcamSelectStep from 'renderer/steps/WebcamSelectStep'
 import SocialsStep from 'renderer/steps/SocialsStep'
+import { Rectangle } from 'renderer/components/FacecamSelection'
+import StepButton from '@mui/material/StepButton'
+import Actions from 'renderer/Actions'
 
 const Layout = styled.div`
   flex: 1;
@@ -105,13 +108,39 @@ function ColorlibStepIcon(props) {
   )
 }
 
+export interface CropData {
+  cropURL: string
+  position: Rectangle
+}
+
 const Home = () => {
+  const realCamHeight = 500
+  const previewWidth = 325
+  const previewHeight = (1920 / 1080) * previewWidth
+
+  const defaultSliderValue = 50
+  const [sliderValue, setSliderValue] = useState(defaultSliderValue)
+  const [sliderChanged, setSliderChanged] = useState(false)
+  const zoomRatio = useMemo(() => sliderValue / 100, [sliderValue])
+  const [facecamCoords, setFacecamCoords] = useState<Rectangle>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  })
+  const [cropData, setCropData] = useState<CropData | undefined>()
+  const [camEnabled, setCamEnabled] = useState(true)
+
   const {
-    state: { isWriting, page, step },
+    dispatch,
+    state: { step: userStep, furthestStep },
   } = useContext(store)
 
-  const steps = ['Step 1', 'Step 2', 'Step 3']
-  console.log({ isWriting, page, step })
+  const steps = [
+    { step: UserStep.IMPORT_CLIP, label: 'Step 1' },
+    { step: UserStep.WEBCAM_SELECT, label: 'Step 2' },
+    { step: UserStep.SOCIALS, label: 'Step 3' },
+  ]
 
   return (
     <Layout>
@@ -120,21 +149,53 @@ const Home = () => {
         <StepperContainer>
           <Stepper
             alternativeLabel
-            activeStep={Number(step)}
+            activeStep={Number(userStep)}
             connector={<ColorlibConnector />}
+            nonLinear
           >
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel StepIconComponent={ColorlibStepIcon}>
-                  {label}
-                </StepLabel>
+            {steps.map(({ label, step }) => (
+              <Step
+                key={label}
+                disabled={userStep === UserStep.SOCIALS || step > furthestStep}
+              >
+                <StepButton onClick={() => dispatch(Actions.setStep(step))}>
+                  <StepLabel StepIconComponent={ColorlibStepIcon}>
+                    {label}
+                  </StepLabel>
+                </StepButton>
               </Step>
             ))}
           </Stepper>
         </StepperContainer>
-        {step === UserStep.IMPORT_CLIP && <UploadStep />}
-        {step === UserStep.WEBCAM_SELECT && <WebcamSelectStep />}
-        {step === UserStep.SOCIALS && <SocialsStep />}
+        {userStep === UserStep.IMPORT_CLIP && <UploadStep />}
+        {userStep === UserStep.WEBCAM_SELECT && (
+          <WebcamSelectStep
+            realCamHeight={realCamHeight}
+            previewWidth={previewWidth}
+            previewHeight={previewHeight}
+            setSliderValue={setSliderValue}
+            sliderChanged={sliderChanged}
+            setSliderChanged={setSliderChanged}
+            zoomRatio={zoomRatio}
+            facecamCoords={facecamCoords}
+            setFacecamCoords={setFacecamCoords}
+            camEnabled={camEnabled}
+            setCamEnabled={setCamEnabled}
+            defaultSliderValue={defaultSliderValue}
+            setCropData={setCropData}
+          />
+        )}
+        {userStep === UserStep.SOCIALS && (
+          <SocialsStep
+            facecamCoords={facecamCoords}
+            previewHeight={previewHeight}
+            previewWidth={previewWidth}
+            realCamHeight={realCamHeight}
+            zoomRatio={zoomRatio}
+            camEnabled={camEnabled}
+            cropURL={cropData?.cropURL}
+          />
+        )}
       </Content>
     </Layout>
   )

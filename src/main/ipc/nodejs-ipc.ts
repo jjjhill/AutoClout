@@ -1,6 +1,7 @@
 import { PythonShell } from 'python-shell'
 import { exec } from 'child_process'
 import { FormatVideoRequest } from 'dto/format'
+import { BIN_PATH, PYTHON_BUILD_PATH } from '../constants'
 
 const invokeFormatScript = (
   args: FormatVideoRequest,
@@ -17,6 +18,7 @@ const invokeFormatScript = (
     realCamHeight,
     zoomRatio,
   } = args
+
   if (process.env.NODE_ENV === 'development') {
     const options = {
       args: [
@@ -44,13 +46,19 @@ const invokeFormatScript = (
     pyshell.on('stderr', (data) => onLog(data))
   } else {
     exec(
-      `SET IMAGEMAGICK_BINARY=.\\resources\\bin\\ImageMagick\\magick.exe && SET PY_ENV=production && .\\resources\\build\\exe.win-amd64-3.9\\python-ipc.exe ${fileName} ${username} ${facecamCoords
+      `SET IMAGEMAGICK_BINARY=${BIN_PATH}\\ImageMagick\\magick.exe && SET PY_ENV=production && ${PYTHON_BUILD_PATH}\\exe.win-amd64-3.9\\python-ipc.exe ${fileName} ${
+        username || 'EMPTY'
+      } ${facecamCoords
         .map((x) => x.toString())
-        .join(' ')} ${outputFilePath} ${videoLength} ${realCamHeight}`,
+        .join(
+          ' '
+        )} ${outputFilePath} ${videoLength} ${realCamHeight} ${zoomRatio}`,
       (err, stdOut, stdErr) => {
         onLog(JSON.stringify(err, null, 2))
         onLog(stdOut.toString())
         onLog(stdErr.toString())
+
+        onEndVideoWrite()
       }
     )
   }

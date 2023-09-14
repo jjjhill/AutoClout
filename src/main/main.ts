@@ -12,12 +12,16 @@ import invokeFormatScript from './ipc/nodejs-ipc'
 import { DownloadVideoRequest, FormatVideoRequest } from 'dto/format'
 import windowStateKeeper from '../windowStateKeeper'
 import downloadVideo from './downloadVideo'
+import { ASSETS_PATH } from './constants'
+// import { fork } from 'child_process'
+// fork(`${__dirname}/server.js`)
 
 process.on('uncaughtException', function (error) {
   onLog(error)
 })
 
 const onLog = (message) => {
+  log.info(message)
   setTimeout(() => {
     if (mainWindow?.webContents) {
       mainWindow?.webContents.send('main-message', JSON.stringify(message))
@@ -83,12 +87,8 @@ const createWindow = async () => {
     await installExtensions()
   }
 
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets')
-
   const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths)
+    return path.join(ASSETS_PATH, ...paths)
   }
   const mainWindowStateKeeper = windowStateKeeper('main')
 

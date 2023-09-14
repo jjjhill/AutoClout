@@ -1,17 +1,18 @@
 {
-  "name": "electron-react-boilerplate",
-  "version": "4.4.0",
-  "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
+  "name": "auto-clout",
+  "description": "Automatically format videos for mobile",
+  "version": "0.0.1",
   "main": "./dist/main/main.js",
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://github.com/electron-react-boilerplate"
+    "name": "Josh Hill",
+    "email": "1998.josh.hill@gmail.com",
+    "url": "https://github.com/jjjhill"
   },
   "scripts": {
     "electron-rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts",
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
-  "license": "MIT"
+  "dependencies": {},
+  "license": "UNLICENSED"
 }

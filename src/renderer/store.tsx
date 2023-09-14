@@ -1,11 +1,12 @@
 import { Context, createContext, useReducer } from 'react'
-import { ActionTypes } from './actions'
+import { ActionTypes } from './Actions'
 import { Page, UserStep } from './constants'
 
 interface State {
   isWriting: boolean
   page: Page
   step: UserStep
+  furthestStep: UserStep
   screenshotURL: string
   downloadFilePath: string
   outputFilePath: string
@@ -17,11 +18,12 @@ const initialState: State = {
   isWriting: false,
   page: Page.HOME,
   step: UserStep.IMPORT_CLIP,
-  // step: UserStep.WEBCAM_SELECT,
+  furthestStep: UserStep.IMPORT_CLIP,
   screenshotURL: '',
-  // 'C:\\Users\\Josh\\AutoClout\\images\\AcceptableHyperPicklesBabyRage-eAkifivv119ahBkV.png',
+  // 'C:\\Users\\Josh\\AutoClout\\images\\BashfulAntediluvianAsparagusCoolCat-KC5XenGhfzeqGF6T.png',
   downloadFilePath: '',
   outputFilePath: '',
+  // 'C:\\Users\\Josh\\AutoClout\\out\\BashfulAntediluvianAsparagusCoolCat-KC5XenGhfzeqGF6T.mp4',
   videoLength: 0,
   imageDimensions: { width: 0, height: 0 },
 }
@@ -43,6 +45,7 @@ const StateProvider = ({ children }) => {
         return {
           ...state,
           step: payload,
+          furthestStep: Math.max(payload, state.furthestStep) as UserStep,
         }
       case ActionTypes.SET_PAGE:
         return {

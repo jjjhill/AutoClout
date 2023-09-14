@@ -2,6 +2,7 @@ import Jimp from 'jimp'
 import { FormatPreviewRequest, Side } from 'renderer/components/Preview'
 
 import registerPromiseWorker from 'promise-worker/register'
+import log from 'electron-log'
 registerPromiseWorker(async (message) => {
   if (message.type === 'generatePreview') {
     const preview = await generatePreview(message.args)
@@ -71,6 +72,7 @@ const generatePreview = async (args: FormatPreviewRequest) => {
     return buffer?.toString()
   } catch (err) {
     console.error(err)
+    log.error(err)
     return undefined
   }
 }

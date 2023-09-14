@@ -1,3 +1,4 @@
+import log from 'electron-log'
 import Jimp from 'jimp'
 import { FormatPreviewRequest, Side } from 'renderer/components/Preview'
 // zoomRatio from 0->1 (least zoomed to most)
@@ -84,11 +85,10 @@ const generatePreview = async (args: FormatPreviewRequest) => {
 
     blurredBackground?.composite(image, 0, gameplayVerticalOffset)
     const buffer = await blurredBackground.getBase64Async(Jimp.MIME_PNG)
-    // console.log({ buffer: buffer.toString() })
     return buffer.toString()
   } catch (err) {
-    // console.log('errrored')
     console.error(err)
+    log.error(err.toString())
     return undefined
   }
 }

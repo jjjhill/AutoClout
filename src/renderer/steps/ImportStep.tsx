@@ -5,12 +5,18 @@ import { colors, Page, UserStep } from 'renderer/constants'
 import InputSource from '@mui/material/Input'
 import ButtonSource from '@mui/material/Button'
 import { ipcRenderer } from 'electron'
+import Actions from 'renderer/Actions'
+import path from 'path'
+import CircularProgress from '@mui/material/CircularProgress'
+import log from 'electron-log'
+import { PYTHON_BUILD_PATH, BIN_PATH } from 'main/constants'
 import extractFrames from 'ffmpeg-extract-frames'
 import ffmpeg from 'fluent-ffmpeg'
-import Actions from 'renderer/actions'
-import path from 'path'
-import fs from 'fs'
-import CircularProgress from '@mui/material/CircularProgress'
+// import ffprobe from 'ffprobe-static'
+const ffprobePath = `${BIN_PATH}\\ffprobe.exe`
+log.info({ ffprobePath })
+console.log({ ffprobePath })
+ffmpeg.setFfprobePath(ffprobePath)
 
 const Container = styled.div`
   background: ${colors.darkGray};
@@ -53,7 +59,6 @@ const Input = styled(InputSource)`
 
 const Button = styled(ButtonSource)`
   && {
-    background: rgba(255, 136, 32, 1);
     font-size: 16px;
     margin-left: 10px;
     padding: 0 10px;
@@ -90,19 +95,23 @@ const ImportStep = () => {
         }
       )
       setIsDownloading(false)
-      console.log({ outputFile, name })
-      const imagePath = `images\\${name}.png`
+      log.info({ outputFile, name })
+      const imagePath = outputFile
+        .replace('clips', 'images')
+        .replace('mp4', 'png')
+      // `images\\${name}.png`
       setClipName(name)
       dispatch(
         Actions.setOutputFilePath(
-          path.join(process.cwd(), 'out', `${name}.mp4`)
+          outputFile.replace('clips', 'out')
+          // path.join(app.getPath('userData'), 'out', `${name}.mp4`)
         )
       )
 
       ffmpeg.ffprobe(outputFile, (error, metadata) => {
-        console.log({ error, metadata })
+        log.info({ error, metadata, outputFile })
         const duration = metadata.format.duration
-        console.log({ duration })
+        log.info({ error, metadata, duration })
         dispatch(Actions.setVideoLength(Number(duration)))
         const { width, height } = metadata.streams?.[0]
         dispatch(Actions.setImageDimensions({ width, height }))
@@ -112,8 +121,7 @@ const ImportStep = () => {
         input: outputFile,
         output: imagePath,
         offsets: [0],
-        ffmpegPath:
-          'build\\exe.win-amd64-3.9\\lib\\imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe',
+        ffmpegPath: `${PYTHON_BUILD_PATH}\\exe.win-amd64-3.9\\lib\\imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe`,
       })
 
       // const base64 = fs
@@ -121,11 +129,12 @@ const ImportStep = () => {
       //   .toString('base64')
       // dispatch(Actions.setScreenshotURL(`data:image/jpg;base64,${base64}`))
 
-      dispatch(Actions.setScreenshotURL(path.join(process.cwd(), imagePath)))
+      dispatch(Actions.setScreenshotURL(imagePath))
       dispatch(Actions.setStep(UserStep.WEBCAM_SELECT))
       dispatch(Actions.setDownloadFilePath(outputFile))
     } catch (err) {
       console.error(err)
+      log.error(err)
       if (!validateClip(clipLink)) {
         console.warn('the clip link might be in the wrong format')
       }
@@ -142,7 +151,11 @@ const ImportStep = () => {
           onChange={(e) => setClipLink(e.target.value)}
           inputProps={}
         />
-        <Button variant="contained" onClick={() => downloadClip(clipLink)}>
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={() => downloadClip(clipLink)}
+        >
           Create <span className="plus">+</span>
         </Button>
       </FlexRow>

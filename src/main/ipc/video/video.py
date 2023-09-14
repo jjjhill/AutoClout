@@ -19,22 +19,31 @@ def blur(image):
   return gaussian(image.astype(float), sigma=1, truncate=1)
 
 
-defaultOutputFile = os.getcwd() + '\\out\\' + str(time.time()) + '.mp4'
-
-
-def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378, 536), output=defaultOutputFile, videoLength=1, realCamHeight=400, zoomRatio=1):
+def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378, 536), output="", videoLength=5, realCamHeight=400, zoomRatio=1):
   # load mp4
   print('formatVideo called', flush=True)
   print('realCamHeight: ', realCamHeight, flush=True)
 
+  tokens = output.split('\\')
+  print("tokens", tokens, flush=True)
+  tokens.pop()
+  print("tokens", tokens, flush=True)
+  outFolder = '\\'
+  print("outFolder", outFolder, flush=True)
+  outFolder = outFolder.join(tokens)
+  print("outFolder", outFolder, flush=True)
+  if not os.path.exists(outFolder):
+    os.makedirs(outFolder)
+
   main = VideoFileClip(fileName)
   (imageWidth, imageHeight) = main.size
 
-  faceCamClip = crop(main, faceCamCoords[0], faceCamCoords[1], faceCamCoords[2], faceCamCoords[3])
-  # faceCamClip = margin(faceCamClip, None, 0, 0, 20, 0, (0, 0, 0), 0)
-  faceCamClip = resize(faceCamClip, None, realCamHeight, None).set_position(("center", "top"))
-  (_, facecamHeight) = faceCamClip.size
-  print(realCamHeight, facecamHeight, flush=True)
+  if realCamHeight > 0:
+    faceCamClip = crop(main, faceCamCoords[0], faceCamCoords[1], faceCamCoords[2], faceCamCoords[3])
+    # faceCamClip = margin(faceCamClip, None, 0, 0, 20, 0, (0, 0, 0), 0)
+    faceCamClip = resize(faceCamClip, None, realCamHeight, None).set_position(("center", "top"))
+    (_, facecamHeight) = faceCamClip.size
+    print(realCamHeight, facecamHeight, flush=True)
 
   # min/max values for zoom slider
   minRawGameplayWidth = (1080 / 1920) * imageHeight
@@ -76,11 +85,13 @@ def formatVideo(fileName, username="ExquisiteSquid", faceCamCoords=(0, 350, 378,
   # twitchLogo = resize(twitchLogo, (120, 120)).set_position((40+100, linksY))
   main = main.set_position((0, gameplayVerticalOffset))
   clips = [
-      backgroundClip,
-      main,
-      faceCamClip,
-      # twitchLogo,
+      main
   ]
+  if realCamHeight > 0 or zoomRatio < 1:
+    clips = [backgroundClip] + clips
+
+  if realCamHeight > 0:
+    clips = clips + [faceCamClip]
 
   # if not username:
   #   twitchURL = TextClip(username, color='white', fontsize=75).set_position((180+100, linksY + 10))

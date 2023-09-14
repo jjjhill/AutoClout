@@ -1,6 +1,6 @@
 {
-  "name": "electron-react-boilerplate",
-  "description": "Electron application boilerplate based on React, React Router, Webpack, React Fast Refresh for rapid application development",
+  "name": "auto-clout",
+  "description": "Automatically format videos for mobile",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
@@ -18,8 +18,8 @@
     "prepare": "husky install"
   },
   "build": {
-    "productName": "ElectronReact",
-    "appId": "org.erb.ElectronReact",
+    "productName": "AutoClout",
+    "appId": "org.jhgh.AutoClout",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [
@@ -79,13 +79,13 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "electron-react-boilerplate",
-      "repo": "electron-react-boilerplate"
+      "owner": "jjjhill",
+      "repo": "AutoClout"
     }
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
+    "url": "git+https://github.com/jjjhill/AutoClout.git"
   },
   "license": "UNLICENSED",
   "private": true,
@@ -112,6 +112,7 @@
     "browserslist-config-erb": "^0.0.3",
     "chalk": "^4.1.2",
     "concurrently": "^6.3.0",
+    "copy-webpack-plugin": "^10.2.1",
     "core-js": "^3.19.0",
     "cross-env": "^7.0.3",
     "css-loader": "^6.5.0",
@@ -172,7 +173,7 @@
     "@types/react-cropper": "^1.3.1",
     "electron-debug": "^3.2.0",
     "electron-is-packaged": "^1.0.2",
-    "electron-log": "^4.4.1",
+    "electron-log": "^4.4.5",
     "electron-root-path": "^1.0.16",
     "electron-settings": "^4.0.2",
     "electron-updater": "^4.3.9",

@@ -2,15 +2,42 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactCropper from 'react-cropper'
 import 'cropperjs/dist/cropper.css'
 
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import log from 'electron-log'
+
+interface ContainerProps {
+  camEnabled: boolean
+}
 
 const Container = styled.div`
   min-width: 100%;
+  max-height: 100%;
+  position: relative;
 
-  svg {
+  & > div {
+    max-height: 100%;
+  }
+
+  img {
     max-height: 100%;
     max-width: 100%;
   }
+
+  ${({ camEnabled }: ContainerProps) =>
+    !camEnabled &&
+    css`
+      ::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 2;
+        background: rgb(100, 100, 100, 0.4);
+        cursor: not-allowed;
+      }
+    `}
 `
 
 export interface Rectangle {
@@ -20,19 +47,35 @@ export interface Rectangle {
   height: number
 }
 
-interface CropData {
-  cropURL: string
-  position: Rectangle
-}
-
 interface Props {
   imgSrc: string
   handleFacecamSelected: (rect: Rectangle) => void
+  imageDimensions: { width: number; height: number }
+  camEnabled: boolean
+  setCropData: (data: CropData) => void
 }
 
-const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
+const FacecamSelection = ({
+  imgSrc,
+  handleFacecamSelected,
+  imageDimensions,
+  camEnabled,
+  setCropData,
+}: Props) => {
+  log.info({ imageDimensions })
   const cropperRef = useRef<HTMLImageElement>(null)
-  const [cropData, setCropData] = useState<CropData | undefined>()
+
+  useEffect(() => {
+    const cropper = cropperRef?.current?.cropper
+    if (cropper) {
+      if (!camEnabled) {
+        cropper.disable()
+      } else {
+        cropper.enable()
+        cropper.setDragMode('move')
+      }
+    }
+  }, [camEnabled])
 
   const getCropData = () => {
     const cropper = cropperRef?.current?.cropper
@@ -48,7 +91,7 @@ const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
         height,
         width,
       }
-      console.log({ position })
+      log.info({ position })
 
       setCropData({
         cropURL: croppedCanvas.toDataURL(),
@@ -63,10 +106,14 @@ const FacecamSelection = ({ imgSrc, handleFacecamSelected }: Props) => {
     setTimeout(() => getCropData(), 500)
   }, [])
 
+  const maxHeight = 400
+  const maxWidth =
+    (imageDimensions.width / imageDimensions.height) * maxHeight + 300
+
   return (
-    <Container>
+    <Container camEnabled={camEnabled}>
       <ReactCropper
-        style={{ width: '100%' }}
+        style={{ maxWidth: `${maxWidth}px`, maxHeight: `${maxHeight}px` }}
         preview=".img-preview"
         src={imgSrc}
         viewMode={1}
